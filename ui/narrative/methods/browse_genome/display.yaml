@@ -1,0 +1,36 @@
+#
+# define display information
+#
+name: Browse Genome
+tooltip: |
+    Initialize JBrowse with a given KBase Genome object.
+screenshots: []
+
+icon: null
+
+#
+# define a set of similar methods that might be useful to the user
+#
+suggestions:
+    apps:
+        related:
+            []
+        next:
+            []
+    methods:
+        related:
+            []
+        next:
+            []
+
+#
+# Configure the display and description of parameters
+#
+parameters :
+    genome_ref :
+        ui-name : |
+            Genome
+        short-hint : |
+            The Genome to browse
+description : |
+    <p>Prime that genome browser!</p>
