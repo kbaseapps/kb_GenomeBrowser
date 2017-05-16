@@ -167,6 +167,12 @@ class GenomeBrowserTest(unittest.TestCase):
     def test_browse_genome_too_many_assembly(self):
         pass
 
+    def test_browse_genome_gff_fail(self):
+        pass
+
+    def test_browse_genome_fasta_fail(self):
+        pass
+
 
     # # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
     # def test_filter_contigs_ok(self):

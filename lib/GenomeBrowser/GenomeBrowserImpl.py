@@ -41,7 +41,7 @@ KBase genome object.
         # Any configuration parameters that are important should be parsed and
         # saved in the constructor.
         self.callback_url = os.environ.get('SDK_CALLBACK_URL', None)
-        self.shared_folder = config['scratch']
+        self.scratch_dir = config['scratch']
         self.workspace_url = config['workspace-url']
         #END_CONSTRUCTOR
 
@@ -58,10 +58,9 @@ KBase genome object.
         #BEGIN browse_genome
         print('Initializing browse_genome with genome reference = {}'.format(genome_ref))
 
-        browser = GenomeBrowserMaker(self.callback_url, self.workspace_url, self.shared_folder)
+        browser = GenomeBrowserMaker(self.callback_url, self.workspace_url, self.scratch_dir)
         browser_data = browser.create_browser_data(ctx, genome_ref)
 
-        print("Done successfully! Output:")
         pprint(browser_data)
 
         # STEP 4: generate the report

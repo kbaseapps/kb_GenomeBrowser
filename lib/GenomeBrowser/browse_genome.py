@@ -5,16 +5,20 @@ from GenomeFileUtil.GenomeFileUtilClient import GenomeFileUtil
 from AssemblyUtil.AssemblyUtilClient import AssemblyUtil
 from Workspace.WorkspaceClient import Workspace
 from util import (
-    test_reference,
-    test_reference_type
+    check_reference,
+    check_reference_type
 )
+import subprocess
+
 
 class GenomeBrowserMaker:
-    def __init__(self, callback_url, workspace_url, shared_folder):
+    def __init__(self, callback_url, workspace_url, scratch_dir):
         self.callback_url = callback_url
-        self.shared_folder = shared_folder
+        self.scratch_dir = scratch_dir
         self.workspace_url = workspace_url
         self.ws = Workspace(self.workspace_url)
+        self.jbrowse_bin = os.path.join('kb', 'module', 'jbrowse', 'bin')
+        self.out_dir = os.path.join(self.scratch_dir, 'browser_data')
 
     def _get_assembly_ref(self, genome_ref):
         # test if genome references an assembly type
@@ -45,33 +49,74 @@ class GenomeBrowserMaker:
         # permission to it.
         if not genome_ref:
             raise ValueError('genome_ref parameter is required')
-        if not test_reference(genome_ref):
+        if not check_reference(genome_ref):
             raise ValueError('genome_ref must be a reference of the format ws/oid or ws/oid/ver')
-        if not test_reference_type(genome_ref, ['.Genome'], self.workspace_url):
+        if not check_reference_type(genome_ref, ['.Genome'], self.workspace_url):
             raise ValueError('genome_ref must reference a KBaseGenomes.Genome object')
 
+        print('Fetching assembly or contig information from genome...')
         assembly_ref = self._get_assembly_ref(genome_ref)
         if len(assembly_ref) > 1:
             raise ValueError('This genome, {}, appears to reference {} Assemblies or ContigSets, with these object references: {}'.format(genome_ref, len(assembly_ref), assembly_ref))
         elif len(assembly_ref) == 0:
             raise ValueError('There was no Assembly or ContigSet found as a reference to this genome. Unable to build browser data.')
+        print('Done! Found valid assembly data.')
 
         # STEP 2: genome_to_gff
         # get the genome as a local gff file
+        print('Converting genome annotation data to gff file...')
         gfu = GenomeFileUtil(self.callback_url)
         gff_file = gfu.genome_to_gff({'genome_ref': genome_ref})
+        print('Done! GFF file created: {}'.format(gff_file))
 
         # STEP 3: assembly_to_fasta
         # get a fasta file from the genome's linked assembly or contig set
+        print('Converting sequence data to FASTA file...')
         au = AssemblyUtil(self.callback_url)
         fasta_file = au.get_assembly_as_fasta({'ref': assembly_ref[0]})
-
-        # {u'file_path': u'/kb/module/work/tmp/gff_1494890493861/my_test_genome.gff',
-        # u'from_cache': 0}
+        print('Done! FASTA file created: {}'.format(fasta_file))
 
         # STEP 3: run jbrowse conversion scripts
-        #
+        gff_file_path = gff_file.get('file_path', None)
+        fasta_file_path = fasta_file.get('path', None)
+        if not gff_file_path:
+            raise IOError('GFF file was not apparently generated from the given genome. gff_file object missing key "file_path": {}'.format(gff_file))
+        if not fasta_file_path:
+            raise IOError('FASTA file was not apparently generated from the given genome fasta_file. fasta_file object missing key "path": {}'.format(fasta_file))
+
+        # STEP 3a: run the refseq creation
+        print('Converting FASTA to JBrowse refseq track...')
+        refseq_cmd = [os.path.join(self.jbrowse_bin, 'prepare-refseqs.pl'),
+                      '--fasta',
+                      fasta_file_path,
+                      '--out',
+                      self.out_dir]
+        p = subprocess.Popen(refseq_cmd, shell=False)
+        retcode = p.wait()
+        if retcode != 0:
+            raise RuntimeError('Failed to build reference sequence track from FASTA file! Return code: {}'.format(retcode))
+        print('Done creating refseq track!')
+
+        # STEP 3b: run the feature track creation
+        print('Converting GFF to annotation track...')
+        track_cmd = [os.path.join(self.jbrowse_bin, 'flatfile-to-json.pl'),
+                     '--gff',
+                     gff_file_path,
+                     '--trackLabel',
+                     'FeatureAnnotations',
+                     '--trackType',
+                     'CanvasFeatures',
+                     '--out',
+                     self.out_dir]
+        p = subprocess.Popen(track_cmd, shell=False)
+        retcode = p.wait()
+        if retcode != 0:
+            raise RuntimeError('Failed to build feature annotation track from GFF file! Return code: {}'.format(retcode))
+        print('Done creating annotation track!')
+
+        # Final step: return the directory where the JBrowse data lives.
         return {
-            'gff_file': gff_file,
-            'fasta_file': fasta_file
+            'gff_file': gff_file_path,
+            'fasta_file': fasta_file_path,
+            'data_dir': self.out_dir
         }
