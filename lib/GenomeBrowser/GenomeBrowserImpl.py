@@ -2,11 +2,9 @@
 #BEGIN_HEADER
 # The header block is where all import statments should live
 import os
-from Bio import SeqIO
 from pprint import pprint, pformat
 from KBaseReport.KBaseReportClient import KBaseReport
-from GenomeFileUtil.GenomeFileUtilClient import GenomeFileUtil
-import re
+from browse_genome import GenomeBrowserMaker
 #END_HEADER
 
 
@@ -45,9 +43,7 @@ KBase genome object.
         self.callback_url = os.environ.get('SDK_CALLBACK_URL', None)
         self.shared_folder = config['scratch']
         self.workspace_url = config['workspace-url']
-
         #END_CONSTRUCTOR
-        pass
 
 
     def browse_genome(self, ctx, genome_ref):
@@ -60,29 +56,13 @@ KBase genome object.
         # ctx is the context object
         # return variables are: returnVal
         #BEGIN browse_genome
-        print('Initializing browse_genome with params=')
-        pprint(params)
+        print('Initializing browse_genome with genome reference = {}'.format(genome_ref))
 
-        # STEP 1: parameter checking
-        # make sure that genome_ref is an object reference, and its a genome, and we have
-        # permission to it.
-        if not genome_ref:
-            raise ValueError('genome_ref parameter is required')
-        obj_ref_regex = re.compile('^(?P<wsid>\d+)\/(?P<objid>\d+)(\/(?P<ver>\d+))?$')
-        if not obj_ref_regex.match(genome_ref):
-            raise ValueError('genome_ref must be an object reference of the format ws/oid or ws/oid/ver')
-        # TODO: test if genome ref is a genome type
+        browser = GenomeBrowserMaker(self.callback_url, self.workspace_url, self.shared_folder)
+        browser_data = browser.create_browser_data(ctx, genome_ref)
 
-        # STEP 2: genome_to_gff
-        # get the genome as a local gff file
-        gfu = GenomeFileUtil(self.callback_url)
-        results = gfu.genome_to_gff({ 'genome_ref': genome_ref })
-
-        pprint(results)
-
-
-        # STEP 3: run jbrowse conversion scripts
-        #
+        print("Done successfully! Output:")
+        pprint(browser_data)
 
         # STEP 4: generate the report
         returnVal = {
@@ -90,7 +70,6 @@ KBase genome object.
             'report_ref': '11/22/33',
             'genome_ref': genome_ref
         }
-
         #END browse_genome
 
         # At some point might do deeper type checking...
@@ -99,6 +78,7 @@ KBase genome object.
                              'returnVal is not type dict as required.')
         # return the results
         return [returnVal]
+
     def status(self, ctx):
         #BEGIN_STATUS
         returnVal = {'state': "OK",
