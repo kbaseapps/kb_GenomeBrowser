@@ -17,7 +17,7 @@ class GenomeBrowserMaker:
         self.scratch_dir = scratch_dir
         self.workspace_url = workspace_url
         self.ws = Workspace(self.workspace_url)
-        self.jbrowse_bin = os.path.join('kb', 'module', 'jbrowse', 'bin')
+        self.jbrowse_bin = os.path.abspath(os.path.join(os.sep, 'kb', 'module', 'jbrowse', 'bin'))
         self.out_dir = os.path.join(self.scratch_dir, 'browser_data')
 
     def _get_assembly_ref(self, genome_ref):
@@ -91,6 +91,8 @@ class GenomeBrowserMaker:
                       fasta_file_path,
                       '--out',
                       self.out_dir]
+        print('refseq command:')
+        print(refseq_cmd)
         p = subprocess.Popen(refseq_cmd, shell=False)
         retcode = p.wait()
         if retcode != 0:
@@ -108,6 +110,8 @@ class GenomeBrowserMaker:
                      'CanvasFeatures',
                      '--out',
                      self.out_dir]
+        print('track command:')
+        print(track_cmd)
         p = subprocess.Popen(track_cmd, shell=False)
         retcode = p.wait()
         if retcode != 0:
