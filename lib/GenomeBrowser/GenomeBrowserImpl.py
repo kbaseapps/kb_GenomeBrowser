@@ -2,13 +2,15 @@
 #BEGIN_HEADER
 # The header block is where all import statments should live
 import os
+import uuid
 from pprint import pprint, pformat
 from KBaseReport.KBaseReportClient import KBaseReport
-from browse_genome import GenomeBrowserMaker
+from GenomeBrowser.browse_genome import GenomeBrowserMaker
+from GenomeBrowser.util import package_directory
 #END_HEADER
 
 
-class GenomeBrowser:
+class GenomeBrowser(object):
     '''
     Module Name:
     GenomeBrowser
@@ -60,16 +62,32 @@ KBase genome object.
 
         browser = GenomeBrowserMaker(self.callback_url, self.workspace_url, self.scratch_dir)
         browser_data = browser.create_browser_data(ctx, genome_ref)
-        browser.package_jbrowse_data(browser_data['data_dir'], os.path.join(self.scratch_dir, 'minimal_jbrowse'))
-
         pprint(browser_data)
+
+        browser.package_jbrowse_data(browser_data['data_dir'], os.path.join(self.scratch_dir, 'minimal_jbrowse'))
+        html_zipped = package_directory(self.callback_url, os.path.join(self.scratch_dir, 'minimal_jbrowse'), 'browser.html', 'Packaged genome browser')
+        report_params = {
+            "message": "",
+            "direct_html_link_index": 0,
+            "html_links": [html_zipped],
+            "file_links": [html_zipped],
+            "report_object_name": "GenomeBrowser-" + str(uuid.uuid4()),
+            "workspace_name": genome_ref.split('/')[0]
+        }
+
+        pprint(report_params)
+
+        kr = KBaseReport(self.callback_url)
+        report_output = kr.create_extended_report(report_params)
 
         # STEP 4: generate the report
         returnVal = {
-            'report_name': 'gb_report',
-            'report_ref': '11/22/33',
+            'report_name': report_output['name'],
+            'report_ref': report_output['ref'],
             'genome_ref': genome_ref
         }
+        pprint('DONE')
+        pprint(returnVal)
         #END browse_genome
 
         # At some point might do deeper type checking...

@@ -165,9 +165,8 @@ class GenomeBrowserMaker:
             jb_path = os.path.join(self.jbrowse_dir, f)
             shutil.copy2(jb_path, os.path.join(output_dir, f))
 
+        # get rid of the src/util tree
+        shutil.rmtree(os.path.join(output_dir, 'src', 'util'))
+
         # mv data_dir -> output_dir/data
         shutil.move(data_dir, os.path.join(output_dir, 'data'))
-
-
-        # upload to shock
-        # return report info?
