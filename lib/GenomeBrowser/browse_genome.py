@@ -9,6 +9,7 @@ from util import (
     check_reference_type
 )
 import subprocess
+import shutil
 
 
 class GenomeBrowserMaker:
@@ -17,7 +18,8 @@ class GenomeBrowserMaker:
         self.scratch_dir = scratch_dir
         self.workspace_url = workspace_url
         self.ws = Workspace(self.workspace_url)
-        self.jbrowse_bin = os.path.abspath(os.path.join(os.sep, 'kb', 'module', 'jbrowse', 'bin'))
+        self.jbrowse_dir = os.path.abspath(os.path.join(os.sep, 'kb', 'module', 'jbrowse'))
+        self.jbrowse_bin = os.path.join(self.jbrowse_dir, 'bin')
         self.out_dir = os.path.join(self.scratch_dir, 'browser_data')
 
     def _get_assembly_ref(self, genome_ref):
@@ -124,3 +126,48 @@ class GenomeBrowserMaker:
             'fasta_file': fasta_file_path,
             'data_dir': self.out_dir
         }
+
+    def package_jbrowse_data(self, data_dir, output_dir):
+        """
+        Packages the necessary parts of JBrowse (in the standard location:
+        /kb/module/jbrowse) along with the data_dir into output_dir.
+        output_dir should be an ABSOLUTE path. (e.g. /kb/module/work/tmp/minimal_jbrowse)
+
+        NOTE: this is the big piece necessary for JBrowse compatibility with specific
+        versions. It's currently made for JBrowse 1.12.3.
+        """
+        # mkdir output_dir
+        os.makedirs(output_dir)
+
+        # cp pieces of the JBrowse dir into output_dir
+        dirs_from_jbrowse = [
+            'browser',
+            'css',
+            'img',
+            'plugins',
+            'src'
+        ]
+        files_from_jbrowse = [
+            'bower.json',
+            'compat_121.html',
+            'index.html',
+            'jbrowse_conf.json',
+            'jbrowse.conf',
+            'LICENSE',
+            'MYMETA.json',
+            'MYMETA.yml',
+            'package.json'
+        ]
+        for d in dirs_from_jbrowse:
+            jb_path = os.path.join(self.jbrowse_dir, d)
+            shutil.copytree(jb_path, os.path.join(output_dir, d))
+        for f in files_from_jbrowse:
+            jb_path = os.path.join(self.jbrowse_dir, f)
+            shutil.copy2(jb_path, os.path.join(output_dir, f))
+
+        # mv data_dir -> output_dir/data
+        shutil.move(data_dir, os.path.join(output_dir, 'data'))
+
+
+        # upload to shock
+        # return report info?

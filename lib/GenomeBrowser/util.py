@@ -3,7 +3,7 @@ Some utility functions that deal with object reference validation.
 """
 import re
 from Workspace.WorkspaceClient import Workspace
-
+from DataFileUtil.DataFileUtilClient import DataFileUtil
 def check_reference(ref):
     """
     Tests the given ref string to make sure it conforms to the expected
@@ -30,3 +30,13 @@ def check_reference_type(ref, allowed_types, ws_url):
         if t in info[2]:
             passes = True
     return passes
+
+def package_directory(callback_url, dir_path, zip_file_name, zip_file_description):
+    ''' Simple utility for packaging a folder and saving to shock '''
+    dfu = DataFileUtil(callback_url)
+    output = dfu.file_to_shock({'file_path': dir_path,
+                                'make_handle': 0,
+                                'pack': 'zip'})
+    return {'shock_id': output['shock_id'],
+            'name': zip_file_name,
+            'description': zip_file_description}

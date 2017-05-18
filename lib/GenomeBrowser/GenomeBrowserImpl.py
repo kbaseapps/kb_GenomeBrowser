@@ -60,6 +60,7 @@ KBase genome object.
 
         browser = GenomeBrowserMaker(self.callback_url, self.workspace_url, self.scratch_dir)
         browser_data = browser.create_browser_data(ctx, genome_ref)
+        browser.package_jbrowse_data(browser_data['data_dir'], os.path.join(self.scratch_dir, 'minimal_jbrowse'))
 
         pprint(browser_data)
 
