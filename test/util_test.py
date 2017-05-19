@@ -1,8 +1,9 @@
 import unittest
 
-from GenomeBrowser.util import (
+from kb_GenomeBrowser.util import (
     check_reference,
-    check_reference_type
+    check_reference_type,
+    package_directory
 )
 
 class GBUtilTest(unittest.TestCase):
@@ -19,4 +20,7 @@ class GBUtilTest(unittest.TestCase):
             self.assertFalse(check_reference(ref))
 
     def test_check_ref_type(self):
+        pass
+
+    def test_package_directory(self):
         pass

@@ -15,9 +15,9 @@ except:
 from pprint import pprint  # noqa: F401
 
 from biokbase.workspace.client import Workspace as workspaceService
-from GenomeBrowser.GenomeBrowserImpl import GenomeBrowser
-from GenomeBrowser.GenomeBrowserServer import MethodContext
-from GenomeBrowser.authclient import KBaseAuth as _KBaseAuth
+from kb_GenomeBrowser.kb_GenomeBrowserImpl import kb_GenomeBrowser
+from kb_GenomeBrowser.kb_GenomeBrowserServer import MethodContext
+from kb_GenomeBrowser.authclient import KBaseAuth as _KBaseAuth
 
 from AssemblyUtil.AssemblyUtilClient import AssemblyUtil
 from GenomeFileUtil.GenomeFileUtilClient import GenomeFileUtil
@@ -31,7 +31,7 @@ class GenomeBrowserTest(unittest.TestCase):
         cls.cfg = {}
         config = ConfigParser()
         config.read(config_file)
-        for nameval in config.items('GenomeBrowser'):
+        for nameval in config.items('kb_GenomeBrowser'):
             cls.cfg[nameval[0]] = nameval[1]
         # Getting username from Auth profile for token
         authServiceUrl = cls.cfg['auth-service-url']
@@ -43,14 +43,14 @@ class GenomeBrowserTest(unittest.TestCase):
         cls.ctx.update({'token': token,
                         'user_id': user_id,
                         'provenance': [
-                            {'service': 'GenomeBrowser',
+                            {'service': 'kb_GenomeBrowser',
                              'method': 'please_never_use_it_in_production',
                              'method_params': []
                              }],
                         'authenticated': 1})
         cls.wsURL = cls.cfg['workspace-url']
         cls.wsClient = workspaceService(cls.wsURL)
-        cls.serviceImpl = GenomeBrowser(cls.cfg)
+        cls.serviceImpl = kb_GenomeBrowser(cls.cfg)
         cls.scratch = cls.cfg['scratch']
         cls.callback_url = os.environ['SDK_CALLBACK_URL']
 

@@ -1,10 +1,10 @@
 /*
-KBase module: GenomeBrowser
+KBase module: kb_GenomeBrowser
 This implements the browse_genome function that sets up files needed for JBrowse to run with a
 KBase genome object.
 */
 
-module GenomeBrowser {
+module kb_GenomeBrowser {
     typedef structure {
         string report_name;
         string report_ref;

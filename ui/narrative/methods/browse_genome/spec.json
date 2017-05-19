@@ -25,7 +25,7 @@
     "behavior": {
         "service-mapping": {
             "url": "",
-            "name": "GenomeBrowser",
+            "name": "kb_GenomeBrowser",
             "method": "browse_genome",
             "input_mapping": [
                 {

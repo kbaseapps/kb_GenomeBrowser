@@ -1,4 +1,4 @@
-package GenomeBrowser::GenomeBrowserClient;
+package kb_GenomeBrowser::kb_GenomeBrowserClient;
 
 use JSON::RPC::Client;
 use POSIX;
@@ -21,12 +21,12 @@ our $VERSION = "0.1.0";
 
 =head1 NAME
 
-GenomeBrowser::GenomeBrowserClient
+kb_GenomeBrowser::kb_GenomeBrowserClient
 
 =head1 DESCRIPTION
 
 
-KBase module: GenomeBrowser
+KBase module: kb_GenomeBrowser
 This implements the browse_genome function that sets up files needed for JBrowse to run with a
 KBase genome object.
 
@@ -36,10 +36,10 @@ KBase genome object.
 sub new
 {
     my($class, $url, @args) = @_;
-    
+
 
     my $self = {
-	client => GenomeBrowser::GenomeBrowserClient::RpcClient->new,
+	client => kb_GenomeBrowser::kb_GenomeBrowserClient::RpcClient->new,
 	url => $url,
 	headers => [],
     };
@@ -92,15 +92,15 @@ sub new
 	        $self->{token} = $token->token;
 	    }
 	}
-	
+
 	if (exists $self->{token})
 	{
 	    $self->{client}->{token} = $self->{token};
 	}
     }
 
-    my $ua = $self->{client}->ua;	 
-    my $timeout = $ENV{CDMI_TIMEOUT} || (30 * 60);	 
+    my $ua = $self->{client}->ua;
+    my $timeout = $ENV{CDMI_TIMEOUT} || (30 * 60);
     $ua->timeout($timeout);
     bless $self, $class;
     #    $self->_validate_version();
@@ -122,7 +122,7 @@ sub new
 
 <pre>
 $genome_ref is a string
-$return is a GenomeBrowser.BrowseGenomeResults
+$return is a kb_GenomeBrowser.BrowseGenomeResults
 BrowseGenomeResults is a reference to a hash where the following keys are defined:
 	report_name has a value which is a string
 	report_ref has a value which is a string
@@ -135,7 +135,7 @@ BrowseGenomeResults is a reference to a hash where the following keys are define
 =begin text
 
 $genome_ref is a string
-$return is a GenomeBrowser.BrowseGenomeResults
+$return is a kb_GenomeBrowser.BrowseGenomeResults
 BrowseGenomeResults is a reference to a hash where the following keys are defined:
 	report_name has a value which is a string
 	report_ref has a value which is a string
@@ -177,7 +177,7 @@ BrowseGenomeResults is a reference to a hash where the following keys are define
 
     my $url = $self->{url};
     my $result = $self->{client}->call($url, $self->{headers}, {
-	    method => "GenomeBrowser.browse_genome",
+	    method => "kb_GenomeBrowser.browse_genome",
 	    params => \@args,
     });
     if ($result) {
@@ -197,8 +197,8 @@ BrowseGenomeResults is a reference to a hash where the following keys are define
 				       );
     }
 }
- 
-  
+
+
 sub status
 {
     my($self, @args) = @_;
@@ -208,7 +208,7 @@ sub status
     }
     my $url = $self->{url};
     my $result = $self->{client}->call($url, $self->{headers}, {
-        method => "GenomeBrowser.status",
+        method => "kb_GenomeBrowser.status",
         params => \@args,
     });
     if ($result) {
@@ -228,12 +228,12 @@ sub status
                        );
     }
 }
-   
+
 
 sub version {
     my ($self) = @_;
     my $result = $self->{client}->call($self->{url}, $self->{headers}, {
-        method => "GenomeBrowser.version",
+        method => "kb_GenomeBrowser.version",
         params => [],
     });
     if ($result) {
@@ -276,10 +276,10 @@ sub _validate_version {
         );
     }
     if ($sMinor > $cMinor) {
-        warn "New client version available for GenomeBrowser::GenomeBrowserClient\n";
+        warn "New client version available for kb_GenomeBrowser::kb_GenomeBrowserClient\n";
     }
     if ($sMajor == 0) {
-        warn "GenomeBrowser::GenomeBrowserClient version is $svr_version. API subject to change.\n";
+        warn "kb_GenomeBrowser::kb_GenomeBrowserClient version is $svr_version. API subject to change.\n";
     }
 }
 
@@ -323,7 +323,7 @@ genome_ref has a value which is a string
 
 =cut
 
-package GenomeBrowser::GenomeBrowserClient::RpcClient;
+package kb_GenomeBrowser::kb_GenomeBrowserClient::RpcClient;
 use base 'JSON::RPC::Client';
 use POSIX;
 use strict;

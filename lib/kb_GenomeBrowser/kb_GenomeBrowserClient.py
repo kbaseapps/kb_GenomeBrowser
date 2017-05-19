@@ -17,7 +17,7 @@ except:
     from baseclient import BaseClient as _BaseClient  # @Reimport
 
 
-class GenomeBrowser(object):
+class kb_GenomeBrowser(object):
 
     def __init__(
             self, url=None, timeout=30 * 60, user_id=None,
@@ -41,9 +41,9 @@ class GenomeBrowser(object):
            String, parameter "genome_ref" of String
         """
         return self._client.call_method(
-            'GenomeBrowser.browse_genome',
+            'kb_GenomeBrowser.browse_genome',
             [genome_ref], self._service_ver, context)
 
     def status(self, context=None):
-        return self._client.call_method('GenomeBrowser.status',
+        return self._client.call_method('kb_GenomeBrowser.status',
                                         [], self._service_ver, context)

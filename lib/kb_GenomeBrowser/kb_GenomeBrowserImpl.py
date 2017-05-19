@@ -5,18 +5,18 @@ import os
 import uuid
 from pprint import pprint, pformat
 from KBaseReport.KBaseReportClient import KBaseReport
-from GenomeBrowser.browse_genome import GenomeBrowserMaker
-from GenomeBrowser.util import package_directory
+from kb_GenomeBrowser.browse_genome import GenomeBrowserMaker
+from kb_GenomeBrowser.util import package_directory
 #END_HEADER
 
 
-class GenomeBrowser(object):
+class kb_GenomeBrowser(object):
     '''
     Module Name:
-    GenomeBrowser
+    kb_GenomeBrowser
 
     Module Description:
-    KBase module: GenomeBrowser
+    KBase module: kb_GenomeBrowser
 This implements the browse_genome function that sets up files needed for JBrowse to run with a
 KBase genome object.
     '''
