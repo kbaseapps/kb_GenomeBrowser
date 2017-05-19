@@ -81,7 +81,7 @@ KBase genome object.
         pprint(browser_data)
 
         browser.package_jbrowse_data(browser_data['data_dir'], os.path.join(self.scratch_dir, 'minimal_jbrowse'))
-        html_zipped = package_directory(self.callback_url, os.path.join(self.scratch_dir, 'minimal_jbrowse'), 'browser.html', 'Packaged genome browser')
+        html_zipped = package_directory(self.callback_url, os.path.join(self.scratch_dir, 'minimal_jbrowse'), 'index.html', 'Packaged genome browser')
         report_params = {
             "message": "Genome Browser for {}".format(genome_ref),
             "direct_html_link_index": 0,
