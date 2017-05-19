@@ -154,8 +154,8 @@ class GenomeBrowserTest(unittest.TestCase):
         genome_ref = self.load_genbank_file(gbk_file, 'my_test_genome')
 
         ret = self.getImpl().browse_genome(self.getContext(), genome_ref, self.getWsName())
-        self.assertEqual(ret[0]['report_name'], 'gb_report')
-        self.assertEqual(ret[0]['report_ref'], '11/22/33')
+        self.assertTrue(ret[0]['report_name'].startswith("GenomeBrowser"))
+        self.assertTrue(check_reference(ret[0]['report_ref']))
         self.assertEqual(ret[0]['genome_ref'], genome_ref)
 
     def test_browse_genome_no_ref(self):
@@ -215,9 +215,9 @@ class GenomeBrowserTest(unittest.TestCase):
             None, 'foobar', '123', 456
         ]
         for name in good_names:
-            self.assertTrue(check_workspace_name(name))
+            self.assertTrue(check_workspace_name(name, self.wsURL))
         for name in bad_names:
-            self.assertFalse(check_workspace_name(name))
+            self.assertFalse(check_workspace_name(name, self.wsURL))
 
 
 
