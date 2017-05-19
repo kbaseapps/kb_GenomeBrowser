@@ -25,6 +25,7 @@ from GenomeFileUtil.GenomeFileUtilClient import GenomeFileUtil
 from kb_GenomeBrowser.util import (
     check_reference,
     check_reference_type,
+    check_workspace_name,
     package_directory
 )
 
@@ -216,7 +217,7 @@ class GenomeBrowserTest(unittest.TestCase):
         for name in good_names:
             self.assertTrue(check_workspace_name(name))
         for name in bad_names:
-            self.assertFalse(check_workspace_name(name)
+            self.assertFalse(check_workspace_name(name))
 
 
 
