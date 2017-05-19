@@ -335,7 +335,7 @@ class Application(object):
         self.method_authentication = dict()
         self.rpc_service.add(impl_kb_GenomeBrowser.browse_genome,
                              name='kb_GenomeBrowser.browse_genome',
-                             types=[basestring])
+                             types=[basestring, basestring])
         self.method_authentication['kb_GenomeBrowser.browse_genome'] = 'required'  # noqa
         self.rpc_service.add(impl_kb_GenomeBrowser.status,
                              name='kb_GenomeBrowser.status',

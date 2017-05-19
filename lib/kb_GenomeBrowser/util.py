@@ -31,6 +31,20 @@ def check_reference_type(ref, allowed_types, ws_url):
             passes = True
     return passes
 
+def check_workspace_name(ws_name, ws_url):
+    """
+    Tests whether the given workspace name actually exists, is accessible by the current user,
+    and is an appropriately formatted name.
+    Really, it just pokes the Workspace with the name and returns True if it can.
+    """
+    ws = Workspace(ws_url)
+    try:
+        # let the Workspace do the work - if this is NOT a real name, it will raise an exception.
+        ws.get_workspace_info({"workspace": ws_name})
+        return True
+    except:
+        return False
+
 def package_directory(callback_url, dir_path, zip_file_name, zip_file_description):
     ''' Simple utility for packaging a folder and saving to shock '''
     dfu = DataFileUtil(callback_url)

@@ -22,6 +22,13 @@ from kb_GenomeBrowser.authclient import KBaseAuth as _KBaseAuth
 from AssemblyUtil.AssemblyUtilClient import AssemblyUtil
 from GenomeFileUtil.GenomeFileUtilClient import GenomeFileUtil
 
+from kb_GenomeBrowser.util import (
+    check_reference,
+    check_reference_type,
+    package_directory
+)
+
+
 class GenomeBrowserTest(unittest.TestCase):
 
     @classmethod
@@ -145,18 +152,18 @@ class GenomeBrowserTest(unittest.TestCase):
         shutil.copy(base_gbk_file, gbk_file)
         genome_ref = self.load_genbank_file(gbk_file, 'my_test_genome')
 
-        ret = self.getImpl().browse_genome(self.getContext(), genome_ref)
+        ret = self.getImpl().browse_genome(self.getContext(), genome_ref, self.getWsName())
         self.assertEqual(ret[0]['report_name'], 'gb_report')
         self.assertEqual(ret[0]['report_ref'], '11/22/33')
         self.assertEqual(ret[0]['genome_ref'], genome_ref)
 
     def test_browse_genome_no_ref(self):
         with self.assertRaises(ValueError) as error:
-            self.getImpl().browse_genome(self.getContext(), None)
+            self.getImpl().browse_genome(self.getContext(), None, None)
 
     def test_browse_genome_bad_ref(self):
         with self.assertRaises(ValueError) as error:
-            self.getImpl().browse_genome(self.getContext(), 'not_a_genome_ref')
+            self.getImpl().browse_genome(self.getContext(), 'not_a_genome_ref', self.getWsName())
 
     def test_browse_genome_not_genome(self):
         pass
@@ -172,6 +179,45 @@ class GenomeBrowserTest(unittest.TestCase):
 
     def test_browse_genome_fasta_fail(self):
         pass
+
+    def test_browse_genome_bad_ws_name(self):
+        with self.assertRaises(ValueError) as error:
+            self.getImpl().browse_genome(self.getContext(), 'some_genome', 123)
+
+    def test_browse_genome_no_ws_name(self):
+        with self.assertRaises(ValueError) as error:
+            self.getImpl().browse_genome(self.getContext(), 'some_genome', None)
+
+    def test_check_ref(self):
+        good_refs = [
+            '11/22/33', '11/22', '11/22/33;44/55', '11/22;44/55', '11/22;44/55/66'
+        ]
+        bad_refs = [
+            'not_a_ref', '1', '11/', '11/22/', '11/22;'
+        ]
+        for ref in good_refs:
+            self.assertTrue(check_reference(ref))
+        for ref in bad_refs:
+            self.assertFalse(check_reference(ref))
+
+    def test_check_ref_type(self):
+        pass
+
+    def test_package_directory(self):
+        pass
+
+    def test_check_workspace_name(self):
+        good_names = [
+            self.getWsName()
+        ]
+        bad_names = [
+            None, 'foobar', '123', 456
+        ]
+        for name in good_names:
+            self.assertTrue(check_workspace_name(name))
+        for name in bad_names:
+            self.assertFalse(check_workspace_name(name)
+
 
 
     # # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
