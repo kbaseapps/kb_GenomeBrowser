@@ -25,12 +25,16 @@
     "behavior": {
         "service-mapping": {
             "url": "",
-            "name": "GenomeBrowser",
+            "name": "kb_GenomeBrowser",
             "method": "browse_genome",
             "input_mapping": [
                 {
                     "input_parameter": "genome_ref",
                     "target_type_transform": "resolved-ref"
+                },
+                {
+                    "narrative_system_variable": "workspace",
+                    "target_argument_position": 1
                 }
             ],
             "output_mapping": [

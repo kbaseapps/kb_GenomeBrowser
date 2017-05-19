@@ -1,7 +1,7 @@
-SERVICE = genomebrowser
-SERVICE_CAPS = GenomeBrowser
-SPEC_FILE = GenomeBrowser.spec
-URL = https://kbase.us/services/genomebrowser
+SERVICE = kb_genomebrowser
+SERVICE_CAPS = kb_GenomeBrowser
+SPEC_FILE = kb_GenomeBrowser.spec
+URL = https://kbase.us/services/kb_genomebrowser
 DIR = $(shell pwd)
 LIB_DIR = lib
 SCRIPTS_DIR = scripts

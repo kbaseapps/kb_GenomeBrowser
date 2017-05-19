@@ -1,4 +1,4 @@
-package GenomeBrowser::GenomeBrowserClient;
+package kb_GenomeBrowser::kb_GenomeBrowserClient;
 
 use JSON::RPC::Client;
 use POSIX;
@@ -21,12 +21,12 @@ our $VERSION = "0.1.0";
 
 =head1 NAME
 
-GenomeBrowser::GenomeBrowserClient
+kb_GenomeBrowser::kb_GenomeBrowserClient
 
 =head1 DESCRIPTION
 
 
-KBase module: GenomeBrowser
+KBase module: kb_GenomeBrowser
 This implements the browse_genome function that sets up files needed for JBrowse to run with a
 KBase genome object.
 
@@ -39,7 +39,7 @@ sub new
     
 
     my $self = {
-	client => GenomeBrowser::GenomeBrowserClient::RpcClient->new,
+	client => kb_GenomeBrowser::kb_GenomeBrowserClient::RpcClient->new,
 	url => $url,
 	headers => [],
     };
@@ -112,7 +112,7 @@ sub new
 
 =head2 browse_genome
 
-  $return = $obj->browse_genome($genome_ref)
+  $return = $obj->browse_genome($genome_ref, $result_workspace_name)
 
 =over 4
 
@@ -122,7 +122,8 @@ sub new
 
 <pre>
 $genome_ref is a string
-$return is a GenomeBrowser.BrowseGenomeResults
+$result_workspace_name is a string
+$return is a kb_GenomeBrowser.BrowseGenomeResults
 BrowseGenomeResults is a reference to a hash where the following keys are defined:
 	report_name has a value which is a string
 	report_ref has a value which is a string
@@ -135,7 +136,8 @@ BrowseGenomeResults is a reference to a hash where the following keys are define
 =begin text
 
 $genome_ref is a string
-$return is a GenomeBrowser.BrowseGenomeResults
+$result_workspace_name is a string
+$return is a kb_GenomeBrowser.BrowseGenomeResults
 BrowseGenomeResults is a reference to a hash where the following keys are defined:
 	report_name has a value which is a string
 	report_ref has a value which is a string
@@ -146,7 +148,13 @@ BrowseGenomeResults is a reference to a hash where the following keys are define
 
 =item Description
 
+Creates a genome browser from the given genome reference. It extracts the reference sequence from the genome
+for one track and uses the genome's feature annotations for the second track. The compiled browser
+is stored in the workspace with name result_workspace_name.
 
+TODO:
+Add option for BAM alignment file(s).
+Add option for other annotation tracks.
 
 =back
 
@@ -158,16 +166,17 @@ BrowseGenomeResults is a reference to a hash where the following keys are define
 
 # Authentication: required
 
-    if ((my $n = @args) != 1)
+    if ((my $n = @args) != 2)
     {
 	Bio::KBase::Exceptions::ArgumentValidationError->throw(error =>
-							       "Invalid argument count for function browse_genome (received $n, expecting 1)");
+							       "Invalid argument count for function browse_genome (received $n, expecting 2)");
     }
     {
-	my($genome_ref) = @args;
+	my($genome_ref, $result_workspace_name) = @args;
 
 	my @_bad_arguments;
         (!ref($genome_ref)) or push(@_bad_arguments, "Invalid type for argument 1 \"genome_ref\" (value was \"$genome_ref\")");
+        (!ref($result_workspace_name)) or push(@_bad_arguments, "Invalid type for argument 2 \"result_workspace_name\" (value was \"$result_workspace_name\")");
         if (@_bad_arguments) {
 	    my $msg = "Invalid arguments passed to browse_genome:\n" . join("", map { "\t$_\n" } @_bad_arguments);
 	    Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
@@ -177,7 +186,7 @@ BrowseGenomeResults is a reference to a hash where the following keys are define
 
     my $url = $self->{url};
     my $result = $self->{client}->call($url, $self->{headers}, {
-	    method => "GenomeBrowser.browse_genome",
+	    method => "kb_GenomeBrowser.browse_genome",
 	    params => \@args,
     });
     if ($result) {
@@ -208,7 +217,7 @@ sub status
     }
     my $url = $self->{url};
     my $result = $self->{client}->call($url, $self->{headers}, {
-        method => "GenomeBrowser.status",
+        method => "kb_GenomeBrowser.status",
         params => \@args,
     });
     if ($result) {
@@ -233,7 +242,7 @@ sub status
 sub version {
     my ($self) = @_;
     my $result = $self->{client}->call($self->{url}, $self->{headers}, {
-        method => "GenomeBrowser.version",
+        method => "kb_GenomeBrowser.version",
         params => [],
     });
     if ($result) {
@@ -276,10 +285,10 @@ sub _validate_version {
         );
     }
     if ($sMinor > $cMinor) {
-        warn "New client version available for GenomeBrowser::GenomeBrowserClient\n";
+        warn "New client version available for kb_GenomeBrowser::kb_GenomeBrowserClient\n";
     }
     if ($sMajor == 0) {
-        warn "GenomeBrowser::GenomeBrowserClient version is $svr_version. API subject to change.\n";
+        warn "kb_GenomeBrowser::kb_GenomeBrowserClient version is $svr_version. API subject to change.\n";
     }
 }
 
@@ -323,7 +332,7 @@ genome_ref has a value which is a string
 
 =cut
 
-package GenomeBrowser::GenomeBrowserClient::RpcClient;
+package kb_GenomeBrowser::kb_GenomeBrowserClient::RpcClient;
 use base 'JSON::RPC::Client';
 use POSIX;
 use strict;

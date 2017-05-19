@@ -1,5 +1,5 @@
 module-name:
-    GenomeBrowser
+    kb_GenomeBrowser
 
 module-description:
     A KBase module
@@ -12,4 +12,3 @@ module-version:
 
 owners:
     [wjriehl]
-

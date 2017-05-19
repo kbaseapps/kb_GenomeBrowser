@@ -15,12 +15,20 @@ except:
 from pprint import pprint  # noqa: F401
 
 from biokbase.workspace.client import Workspace as workspaceService
-from GenomeBrowser.GenomeBrowserImpl import GenomeBrowser
-from GenomeBrowser.GenomeBrowserServer import MethodContext
-from GenomeBrowser.authclient import KBaseAuth as _KBaseAuth
+from kb_GenomeBrowser.kb_GenomeBrowserImpl import kb_GenomeBrowser
+from kb_GenomeBrowser.kb_GenomeBrowserServer import MethodContext
+from kb_GenomeBrowser.authclient import KBaseAuth as _KBaseAuth
 
 from AssemblyUtil.AssemblyUtilClient import AssemblyUtil
 from GenomeFileUtil.GenomeFileUtilClient import GenomeFileUtil
+
+from kb_GenomeBrowser.util import (
+    check_reference,
+    check_reference_type,
+    check_workspace_name,
+    package_directory
+)
+
 
 class GenomeBrowserTest(unittest.TestCase):
 
@@ -31,7 +39,7 @@ class GenomeBrowserTest(unittest.TestCase):
         cls.cfg = {}
         config = ConfigParser()
         config.read(config_file)
-        for nameval in config.items('GenomeBrowser'):
+        for nameval in config.items('kb_GenomeBrowser'):
             cls.cfg[nameval[0]] = nameval[1]
         # Getting username from Auth profile for token
         authServiceUrl = cls.cfg['auth-service-url']
@@ -43,14 +51,14 @@ class GenomeBrowserTest(unittest.TestCase):
         cls.ctx.update({'token': token,
                         'user_id': user_id,
                         'provenance': [
-                            {'service': 'GenomeBrowser',
+                            {'service': 'kb_GenomeBrowser',
                              'method': 'please_never_use_it_in_production',
                              'method_params': []
                              }],
                         'authenticated': 1})
         cls.wsURL = cls.cfg['workspace-url']
         cls.wsClient = workspaceService(cls.wsURL)
-        cls.serviceImpl = GenomeBrowser(cls.cfg)
+        cls.serviceImpl = kb_GenomeBrowser(cls.cfg)
         cls.scratch = cls.cfg['scratch']
         cls.callback_url = os.environ['SDK_CALLBACK_URL']
 
@@ -145,18 +153,18 @@ class GenomeBrowserTest(unittest.TestCase):
         shutil.copy(base_gbk_file, gbk_file)
         genome_ref = self.load_genbank_file(gbk_file, 'my_test_genome')
 
-        ret = self.getImpl().browse_genome(self.getContext(), genome_ref)
-        self.assertEqual(ret[0]['report_name'], 'gb_report')
-        self.assertEqual(ret[0]['report_ref'], '11/22/33')
+        ret = self.getImpl().browse_genome(self.getContext(), genome_ref, self.getWsName())
+        self.assertTrue(ret[0]['report_name'].startswith("GenomeBrowser"))
+        self.assertTrue(check_reference(ret[0]['report_ref']))
         self.assertEqual(ret[0]['genome_ref'], genome_ref)
 
     def test_browse_genome_no_ref(self):
         with self.assertRaises(ValueError) as error:
-            self.getImpl().browse_genome(self.getContext(), None)
+            self.getImpl().browse_genome(self.getContext(), None, None)
 
     def test_browse_genome_bad_ref(self):
         with self.assertRaises(ValueError) as error:
-            self.getImpl().browse_genome(self.getContext(), 'not_a_genome_ref')
+            self.getImpl().browse_genome(self.getContext(), 'not_a_genome_ref', self.getWsName())
 
     def test_browse_genome_not_genome(self):
         pass
@@ -172,6 +180,45 @@ class GenomeBrowserTest(unittest.TestCase):
 
     def test_browse_genome_fasta_fail(self):
         pass
+
+    def test_browse_genome_bad_ws_name(self):
+        with self.assertRaises(ValueError) as error:
+            self.getImpl().browse_genome(self.getContext(), 'some_genome', 123)
+
+    def test_browse_genome_no_ws_name(self):
+        with self.assertRaises(ValueError) as error:
+            self.getImpl().browse_genome(self.getContext(), 'some_genome', None)
+
+    def test_check_ref(self):
+        good_refs = [
+            '11/22/33', '11/22', '11/22/33;44/55', '11/22;44/55', '11/22;44/55/66'
+        ]
+        bad_refs = [
+            'not_a_ref', '1', '11/', '11/22/', '11/22;'
+        ]
+        for ref in good_refs:
+            self.assertTrue(check_reference(ref))
+        for ref in bad_refs:
+            self.assertFalse(check_reference(ref))
+
+    def test_check_ref_type(self):
+        pass
+
+    def test_package_directory(self):
+        pass
+
+    def test_check_workspace_name(self):
+        good_names = [
+            self.getWsName()
+        ]
+        bad_names = [
+            None, 'foobar', '123', 456
+        ]
+        for name in good_names:
+            self.assertTrue(check_workspace_name(name, self.wsURL))
+        for name in bad_names:
+            self.assertFalse(check_workspace_name(name, self.wsURL))
+
 
 
     # # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa

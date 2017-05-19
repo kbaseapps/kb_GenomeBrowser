@@ -16,7 +16,7 @@ from biokbase import log
 import requests as _requests
 import random as _random
 import os
-from GenomeBrowser.authclient import KBaseAuth as _KBaseAuth
+from kb_GenomeBrowser.authclient import KBaseAuth as _KBaseAuth
 
 DEPLOY = 'KB_DEPLOYMENT_CONFIG'
 SERVICE = 'KB_SERVICE_NAME'
@@ -39,14 +39,14 @@ def get_config():
     retconfig = {}
     config = ConfigParser()
     config.read(get_config_file())
-    for nameval in config.items(get_service_name() or 'GenomeBrowser'):
+    for nameval in config.items(get_service_name() or 'kb_GenomeBrowser'):
         retconfig[nameval[0]] = nameval[1]
     return retconfig
 
 config = get_config()
 
-from GenomeBrowser.GenomeBrowserImpl import GenomeBrowser  # noqa @IgnorePep8
-impl_GenomeBrowser = GenomeBrowser(config)
+from kb_GenomeBrowser.kb_GenomeBrowserImpl import kb_GenomeBrowser  # noqa @IgnorePep8
+impl_kb_GenomeBrowser = kb_GenomeBrowser(config)
 
 
 class JSONObjectEncoder(json.JSONEncoder):
@@ -322,7 +322,7 @@ class Application(object):
                                    context['method'], context['call_id'])
 
     def __init__(self):
-        submod = get_service_name() or 'GenomeBrowser'
+        submod = get_service_name() or 'kb_GenomeBrowser'
         self.userlog = log.log(
             submod, ip_address=True, authuser=True, module=True, method=True,
             call_id=True, changecallback=self.logcallback,
@@ -333,12 +333,12 @@ class Application(object):
         self.serverlog.set_log_level(6)
         self.rpc_service = JSONRPCServiceCustom()
         self.method_authentication = dict()
-        self.rpc_service.add(impl_GenomeBrowser.browse_genome,
-                             name='GenomeBrowser.browse_genome',
-                             types=[basestring])
-        self.method_authentication['GenomeBrowser.browse_genome'] = 'required'  # noqa
-        self.rpc_service.add(impl_GenomeBrowser.status,
-                             name='GenomeBrowser.status',
+        self.rpc_service.add(impl_kb_GenomeBrowser.browse_genome,
+                             name='kb_GenomeBrowser.browse_genome',
+                             types=[basestring, basestring])
+        self.method_authentication['kb_GenomeBrowser.browse_genome'] = 'required'  # noqa
+        self.rpc_service.add(impl_kb_GenomeBrowser.status,
+                             name='kb_GenomeBrowser.status',
                              types=[dict])
         authurl = config.get(AUTH) if config else None
         self.auth_client = _KBaseAuth(authurl)
@@ -393,7 +393,7 @@ class Application(object):
                             err = JSONServerError()
                             err.data = (
                                 'Authentication required for ' +
-                                'GenomeBrowser ' +
+                                'kb_GenomeBrowser ' +
                                 'but no authentication header was passed')
                             raise err
                         elif token is None and auth_req == 'optional':
