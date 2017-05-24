@@ -14,14 +14,15 @@ So Far...
 * Demonstrated that we can export KBase Genomes to the appropriate files.
 * Manually converted those files to JBrowse data.
 * Started JBrowse with those data files.
+* Bundled everything up (including a minimal install of JBrowse) as a Report object that can be viewed through the Narrative.
 
 TODO List:
 * **(done)** Convert from a Genome to a GFF file.
 * **(done)** Convert from a Genome's referenced Assembly or ContigSet to a FASTA file.
 * **(done)** Fail if there's 0 or more than one assembly available.
 * **(done)** Use JBrowse scripts to convert those to track files.
-* Automate JBrowse scripts as part of the job.
-* Package all JBrowse files into a Report (or something else)
+* **(done)** Automate JBrowse scripts as part of the job.
+* **(done)** Package all JBrowse files into a Report (or something else)
 * Make those files accessible to a JBrowse instance.
 * Create an HTML report that can link out to JBrowse.
 * Wherever those files get stored, add a way to signal that they've been created for a given genome, so we only make them once per genome object (MD5? SHA-256?)
