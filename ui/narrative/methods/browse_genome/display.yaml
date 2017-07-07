@@ -32,5 +32,10 @@ parameters :
             Genome
         short-hint : |
             The Genome to browse
+    bam_file_refs :
+        ui-name: |
+            BAM Files
+        short-hint : |
+            A list of BAM files associated with the above Genome.
 description : |
     <p>Prime that genome browser!</p>

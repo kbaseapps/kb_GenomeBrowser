@@ -61,6 +61,7 @@ class GenomeBrowserTest(unittest.TestCase):
         cls.serviceImpl = kb_GenomeBrowser(cls.cfg)
         cls.scratch = cls.cfg['scratch']
         cls.callback_url = os.environ['SDK_CALLBACK_URL']
+        # TODO: migrate data upload code here.
 
     @classmethod
     def tearDownClass(cls):
@@ -86,17 +87,16 @@ class GenomeBrowserTest(unittest.TestCase):
     def getContext(self):
         return self.__class__.ctx
 
-    # # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
-    # def load_fasta_file(self, filename, obj_name, contents):
-    #     f = open(filename, 'w')
-    #     f.write(contents)
-    #     f.close()
-    #     assemblyUtil = AssemblyUtil(self.callback_url)
-    #     assembly_ref = assemblyUtil.save_assembly_from_fasta({'file': {'path': filename},
-    #                                                           'workspace_name': self.getWsName(),
-    #                                                           'assembly_name': obj_name
-    #                                                           })
-    #     return assembly_ref
+    def load_fasta_file(self, filename, obj_name, contents):
+        f = open(filename, 'w')
+        f.write(contents)
+        f.close()
+        assembly_util = AssemblyUtil(self.callback_url)
+        assembly_ref = assembly_util.save_assembly_from_fasta({'file': {'path': filename},
+                                                               'workspace_name': self.getWsName(),
+                                                               'assembly_name': obj_name
+                                                              })
+        return assembly_ref
 
     def load_genbank_file(self, local_file, target_name):
         gfu = GenomeFileUtil(self.callback_url)
@@ -153,32 +153,55 @@ class GenomeBrowserTest(unittest.TestCase):
         shutil.copy(base_gbk_file, gbk_file)
         genome_ref = self.load_genbank_file(gbk_file, 'my_test_genome')
 
-        ret = self.getImpl().browse_genome(self.getContext(), genome_ref, self.getWsName())
+        ret = self.getImpl().browse_genome(self.getContext(), {
+            "genome_ref": genome_ref,
+            "result_workspace_name": self.getWsName()
+        })
         self.assertTrue(ret[0]['report_name'].startswith("GenomeBrowser"))
         self.assertTrue(check_reference(ret[0]['report_ref']))
         self.assertEqual(ret[0]['genome_ref'], genome_ref)
 
     def test_browse_genome_no_ref(self):
         with self.assertRaises(ValueError) as error:
-            self.getImpl().browse_genome(self.getContext(), None, None)
+            self.getImpl().browse_genome(self.getContext(), None)
 
     def test_browse_genome_bad_ref(self):
         with self.assertRaises(ValueError) as error:
-            self.getImpl().browse_genome(self.getContext(), 'not_a_genome_ref', self.getWsName())
+            self.getImpl().browse_genome(self.getContext(), {
+                "genome_ref": "not_a_genome_ref",
+                "result_workspace_name": self.getWsName()
+            })
 
     def test_browse_genome_not_genome(self):
-        pass
+        with self.assertRaises(ValueError) as error:
+            self.getImpl().browse_genome(self.getContext(), {
+                "genome_ref": self.getWsName() + "/12345",
+                "result_workspace_name": self.getWsName()
+            })
 
     def test_browse_genome_no_assembly(self):
+        # NEED A GENOME AS WS JSON FILE TO UPLOAD, or unlink (can I do that?) from an assembly
         pass
 
     def test_browse_genome_too_many_assembly(self):
+        # NEED A GENONE AND AN EXTRA ASSEMBLY FILE TO LINK.
+        fasta_content = """>seq1 something soemthing asdf
+agcttttcat
+>seq2
+agctt
+>seq3
+agcttttcatgg"""
+        assembly_ref = self.load_fasta_file(os.path.join(self.scratch, 'test1.fasta'),
+                                            'TestAssembly',
+                                            fasta_content)
         pass
 
     def test_browse_genome_gff_fail(self):
+        # NEED TO TRIGGER flatfile-to-json.pl FAILURE
         pass
 
     def test_browse_genome_fasta_fail(self):
+        # NEED TO TRIGGER prepare-refseqs.pl FAILURE
         pass
 
     def test_browse_genome_bad_ws_name(self):

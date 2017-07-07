@@ -33,7 +33,7 @@ class kb_GenomeBrowser(object):
             trust_all_ssl_certificates=trust_all_ssl_certificates,
             auth_svc=auth_svc)
 
-    def browse_genome(self, genome_ref, result_workspace_name, context=None):
+    def browse_genome_app(self, params, context=None):
         """
         Creates a genome browser from the given genome reference. It extracts the reference sequence from the genome
         for one track and uses the genome's feature annotations for the second track. The compiled browser
@@ -41,15 +41,37 @@ class kb_GenomeBrowser(object):
         TODO:
         Add option for BAM alignment file(s).
         Add option for other annotation tracks.
-        :param genome_ref: instance of String
-        :param result_workspace_name: instance of String
+        :param params: instance of type "BrowseGenomeParams" -> structure:
+           parameter "genome_ref" of String, parameter
+           "result_workspace_name" of String, parameter "alignment_refs" of
+           list of String
         :returns: instance of type "BrowseGenomeResults" -> structure:
            parameter "report_name" of String, parameter "report_ref" of
            String, parameter "genome_ref" of String
         """
         return self._client.call_method(
-            'kb_GenomeBrowser.browse_genome',
-            [genome_ref, result_workspace_name], self._service_ver, context)
+            'kb_GenomeBrowser.browse_genome_app',
+            [params], self._service_ver, context)
+
+    def build_genome_browser(self, params, context=None):
+        """
+        :param params: instance of type "BuildGenomeBrowserParams" ->
+           structure: parameter "genome_input" of type "GenomeFileInput"
+           (Should have ONE of gff_file (a local file) or genome_ref (an
+           object reference).) -> structure: parameter "gff_file" of String,
+           parameter "genome_ref" of String, parameter "alignment_inputs" of
+           list of type "AlignmentFileInput" (Should have ONE of bam_file (a
+           local file) or alignment_ref (an object reference).) -> structure:
+           parameter "bam_file" of String, parameter "alignment_ref" of
+           String, parameter "result_workspace_id" of Long, parameter
+           "genome_browser_name" of String
+        :returns: instance of type "BuildGenomeBrowserResults" -> structure:
+           parameter "genome_browser_name" of String, parameter
+           "genome_browser_ref" of String
+        """
+        return self._client.call_method(
+            'kb_GenomeBrowser.build_genome_browser',
+            [params], self._service_ver, context)
 
     def status(self, context=None):
         return self._client.call_method('kb_GenomeBrowser.status',

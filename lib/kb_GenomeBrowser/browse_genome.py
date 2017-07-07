@@ -1,12 +1,12 @@
 import os
-from pprint import (pprint, pformat)
-from KBaseReport.KBaseReportClient import KBaseReport
 from GenomeFileUtil.GenomeFileUtilClient import GenomeFileUtil
 from AssemblyUtil.AssemblyUtilClient import AssemblyUtil
+from ReadsAlignmentUtils.ReadsAlignmentUtilsClient import ReadsAlignmentUtils
 from Workspace.WorkspaceClient import Workspace
 from util import (
     check_reference,
-    check_reference_type
+    check_reference_type,
+    get_object_name
 )
 import subprocess
 import shutil
@@ -45,52 +45,20 @@ class GenomeBrowserMaker:
 
         return assembly_ref
 
-    def create_browser_data(self, ctx, genome_ref):
-        # STEP 1: parameter checking
-        # make sure that genome_ref is an object reference, and its a genome, and we have
-        # permission to it.
-        if not genome_ref:
-            raise ValueError('genome_ref parameter is required')
-        if not check_reference(genome_ref):
-            raise ValueError('genome_ref must be a reference of the format ws/oid or ws/oid/ver')
-        if not check_reference_type(genome_ref, ['.Genome'], self.workspace_url):
-            raise ValueError('genome_ref must reference a KBaseGenomes.Genome object')
-
-        print('Fetching assembly or contig information from genome...')
-        assembly_ref = self._get_assembly_ref(genome_ref)
-        if len(assembly_ref) > 1:
-            raise ValueError('This genome, {}, appears to reference {} Assemblies or ContigSets, with these object references: {}'.format(genome_ref, len(assembly_ref), assembly_ref))
-        elif len(assembly_ref) == 0:
-            raise ValueError('There was no Assembly or ContigSet found as a reference to this genome. Unable to build browser data.')
-        print('Done! Found valid assembly data.')
-
-        # STEP 2: genome_to_gff
-        # get the genome as a local gff file
-        print('Converting genome annotation data to gff file...')
-        gfu = GenomeFileUtil(self.callback_url)
-        gff_file = gfu.genome_to_gff({'genome_ref': genome_ref})
-        print('Done! GFF file created: {}'.format(gff_file))
-
-        # STEP 3: assembly_to_fasta
-        # get a fasta file from the genome's linked assembly or contig set
-        print('Converting sequence data to FASTA file...')
-        au = AssemblyUtil(self.callback_url)
-        fasta_file = au.get_assembly_as_fasta({'ref': assembly_ref[0]})
-        print('Done! FASTA file created: {}'.format(fasta_file))
-
-        # STEP 3: run jbrowse conversion scripts
-        gff_file_path = gff_file.get('file_path', None)
-        fasta_file_path = fasta_file.get('path', None)
-        if not gff_file_path:
-            raise IOError('GFF file was not apparently generated from the given genome. gff_file object missing key "file_path": {}'.format(gff_file))
-        if not fasta_file_path:
-            raise IOError('FASTA file was not apparently generated from the given genome fasta_file. fasta_file object missing key "path": {}'.format(fasta_file))
-
-        # STEP 3a: run the refseq creation
+    def create_browser_data_from_files(self, fasta_file, gff_file, alignment_files):
+        """
+        fasta_file = string, path to file
+        gff_file = string, path to file
+        alignment_files = dict,
+            keys = alignment "name" (not necessarily file name),
+            values = path to file
+        """
+        print('Starting create_browser_data_from_files')
+        # STEP 1: run the refseq creation
         print('Converting FASTA to JBrowse refseq track...')
         refseq_cmd = [os.path.join(self.jbrowse_bin, 'prepare-refseqs.pl'),
                       '--fasta',
-                      fasta_file_path,
+                      fasta_file,
                       '--out',
                       self.out_dir]
         print('refseq command:')
@@ -101,11 +69,11 @@ class GenomeBrowserMaker:
             raise RuntimeError('Failed to build reference sequence track from FASTA file! Return code: {}'.format(retcode))
         print('Done creating refseq track!')
 
-        # STEP 3b: run the feature track creation
+        # STEP 2: run the feature track creation
         print('Converting GFF to annotation track...')
         track_cmd = [os.path.join(self.jbrowse_bin, 'flatfile-to-json.pl'),
                      '--gff',
-                     gff_file_path,
+                     gff_file,
                      '--trackLabel',
                      'FeatureAnnotations',
                      '--trackType',
@@ -120,12 +88,123 @@ class GenomeBrowserMaker:
             raise RuntimeError('Failed to build feature annotation track from GFF file! Return code: {}'.format(retcode))
         print('Done creating annotation track!')
 
+        # STEP 3: run the BAM track creation
+        print('Converting BAM files to alignment tracks...')
+        for alignment_name in alignment_files:
+            print('Converting BAM file {}'.format(alignment_name))
+            track_cmd = [os.path.join(self.jbrowse_bin, 'add-bam-track.pl'),
+                         '--label',
+                         alignment_name,
+                         '--bam_url',
+                         alignment_files[alignment_name],
+                         '--in',
+                         os.path.join(self.out_dir, 'trackList.json')]
+            p = subprocess.Popen(track_cmd, shell=False)
+            retcode = p.wait()
+            if retcode != 0:
+                raise RuntimeError('Failed to build alignment track from BAM file! Return code: {}'.format(retcode))
+            print('Done creating alignment track {}'.format(alignment_name))
+        print('Done creating all alignment tracks!')
+        print('Done running create_browser_data_from_files')
         # Final step: return the directory where the JBrowse data lives.
         return {
-            'gff_file': gff_file_path,
-            'fasta_file': fasta_file_path,
+            'gff_file': gff_file,
+            'fasta_file': fasta_file,
             'data_dir': self.out_dir
         }
+
+    def get_genome_data_files(self, genome_ref):
+        genome_files = {
+            "assembly": None,
+            "gff": None
+        }
+        print('Fetching assembly or contig information from genome...')
+        assembly_ref = self._get_assembly_ref(genome_ref)
+        if len(assembly_ref) > 1:
+            raise ValueError('This genome, {}, appears to reference {} Assemblies or ContigSets, with these object references: {}'.format(genome_ref, len(assembly_ref), assembly_ref))
+        elif len(assembly_ref) == 0:
+            raise ValueError('There was no Assembly or ContigSet found as a reference to this genome. Unable to build browser data.')
+        print('Done! Found valid assembly data.')
+
+        print('Converting sequence data to FASTA file...')
+        au = AssemblyUtil(self.callback_url)
+        fasta_file = au.get_assembly_as_fasta({'ref': assembly_ref[0]})
+        print('Done! FASTA file created: {}'.format(fasta_file))
+
+        if "path" not in fasta_file:
+            raise IOError('FASTA file was not apparently generated from the given genome fasta_file. fasta_file object missing key "path": {}'.format(fasta_file))
+        genome_files["assembly"] = fasta_file.get('path', None)
+
+        print('Converting genome annotation data to gff file...')
+        gfu = GenomeFileUtil(self.callback_url)
+        gff_file = gfu.genome_to_gff({'genome_ref': genome_ref})
+        print('Done! GFF file created: {}'.format(gff_file))
+        if "file_path" not in gff_file:
+            raise IOError('GFF file was not apparently generated from the given genome. gff_file object missing key "file_path": {}'.format(gff_file))
+        genome_files["gff"] = gff_file.get('file_path', None)
+
+        return genome_files
+
+    def get_alignment_data_files(self, alignment_refs):
+        alignment_files = dict()
+        ru = ReadsAlignmentUtils(self.callback_url)
+        for ref in alignment_refs:
+            ref_name = get_object_name(ref, self.workspace_url)
+            align_file = ru.download_alignment({
+                "source_ref": ref,
+                "downloadBAI": 1
+            })
+            alignment_files[ref_name] = align_file["destination_dir"]
+        return alignment_files
+
+    def get_browser_data_files(self, genome_ref=None, alignment_refs=None):
+        """
+        if genome_ref is not None, this figures out the assembly ref, then returns paths to
+        both the GFF file and FASTA for the assembly.
+
+        if the alignment_refs list is not None, it fetches the BAM files from each alignment in
+        the list.
+
+        Returns a dictionary of the following:
+        {
+            assembly: string (file path) or None,
+            gff: string (file path) or None,
+            alignments: {
+                name1 (from alignment obj ref): path1,
+                name2: path2,
+                ...etc
+            }
+        }
+
+        if genome_ref and alignment_refs are both none, this doesn't do much, and returns a boring
+        empty dict.
+        """
+        files = dict()
+        if genome_ref is not None:
+            files.update(self.get_genome_data_files(genome_ref))
+
+        if alignment_refs is not None:
+            files.update(self.get_alignment_data_files(alignment_refs))
+
+        return files
+
+    def create_browser_data(self, genome_ref, alignment_refs=None):
+        # parameter checking
+        # make sure that genome_ref is an object reference, and its a genome, and we have
+        # permission to it.
+        if not genome_ref:
+            raise ValueError('genome_ref parameter is required')
+        if not check_reference(genome_ref):
+            raise ValueError('genome_ref must be a reference of the format ws/oid or ws/oid/ver')
+        if not check_reference_type(genome_ref, ['.Genome'], self.workspace_url):
+            raise ValueError('genome_ref must reference a KBaseGenomes.Genome object')
+        if alignment_refs is not None:
+            for ref in alignment_refs:
+                if not check_reference(ref):
+                    raise ValueError('all alignment_refs must be a reference of the format ws/oid or ws/oid/ver')
+
+        files = self.get_browser_data_files(genome_ref=genome_ref, alignment_refs=alignment_refs)
+        return self.create_browser_data_from_files(files["assembly"], files["gff"], files["alignment_refs"])
 
     def package_jbrowse_data(self, data_dir, output_dir):
         """

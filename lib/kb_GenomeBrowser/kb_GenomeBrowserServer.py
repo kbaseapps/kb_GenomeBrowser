@@ -333,10 +333,14 @@ class Application(object):
         self.serverlog.set_log_level(6)
         self.rpc_service = JSONRPCServiceCustom()
         self.method_authentication = dict()
-        self.rpc_service.add(impl_kb_GenomeBrowser.browse_genome,
-                             name='kb_GenomeBrowser.browse_genome',
-                             types=[basestring, basestring])
-        self.method_authentication['kb_GenomeBrowser.browse_genome'] = 'required'  # noqa
+        self.rpc_service.add(impl_kb_GenomeBrowser.browse_genome_app,
+                             name='kb_GenomeBrowser.browse_genome_app',
+                             types=[dict])
+        self.method_authentication['kb_GenomeBrowser.browse_genome_app'] = 'required'  # noqa
+        self.rpc_service.add(impl_kb_GenomeBrowser.build_genome_browser,
+                             name='kb_GenomeBrowser.build_genome_browser',
+                             types=[dict])
+        self.method_authentication['kb_GenomeBrowser.build_genome_browser'] = 'required'  # noqa
         self.rpc_service.add(impl_kb_GenomeBrowser.status,
                              name='kb_GenomeBrowser.status',
                              types=[dict])

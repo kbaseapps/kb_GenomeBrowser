@@ -20,6 +20,17 @@
             "text_options": {
                 "valid_ws_types": [ "KBaseGenomes.Genome" ]
             }
+        },
+        {
+            "id": "bam_file_refs",
+            "optional": true,
+            "advanced": false,
+            "allow_multiple": true,
+            "default_values": [""],
+            "field_type": "text",
+            "text_options": {
+                "valid_ws_types": [ "KBaseRNASeq.RNASeqAlignment" ]
+            }
         }
     ],
     "behavior": {
@@ -30,11 +41,17 @@
             "input_mapping": [
                 {
                     "input_parameter": "genome_ref",
-                    "target_type_transform": "resolved-ref"
+                    "target_type_transform": "resolved-ref",
+                    "target_property": "genome_ref"
                 },
                 {
                     "narrative_system_variable": "workspace",
-                    "target_argument_position": 1
+                    "target_property": "result_workspace_name"
+                },
+                {
+                    "input_parameter": "bam_file_refs",
+                    "target_type_transform": "list<resolved-ref>",
+                    "target_property": "bam_file_refs"
                 }
             ],
             "output_mapping": [
