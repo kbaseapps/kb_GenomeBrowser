@@ -1,0 +1,16 @@
+{
+    "name": "",
+    "short_description": "",
+    "long_description": "",
+    "tags": {
+        "categories": [],
+        "input": {
+            "file_types": [],
+            "kb_types": []
+        },
+        "output": {
+            "file_types": [],
+            "kb_types": []
+        }
+    }
+}
