@@ -234,6 +234,7 @@ BuildGenomeBrowserParams is a reference to a hash where the following keys are d
 	genome_browser_name has a value which is a string
 GenomeFileInput is a reference to a hash where the following keys are defined:
 	gff_file has a value which is a string
+	fasta_file has a value which is a string
 	genome_ref has a value which is a string
 AlignmentFileInput is a reference to a hash where the following keys are defined:
 	bam_file has a value which is a string
@@ -257,6 +258,7 @@ BuildGenomeBrowserParams is a reference to a hash where the following keys are d
 	genome_browser_name has a value which is a string
 GenomeFileInput is a reference to a hash where the following keys are defined:
 	gff_file has a value which is a string
+	fasta_file has a value which is a string
 	genome_ref has a value which is a string
 AlignmentFileInput is a reference to a hash where the following keys are defined:
 	bam_file has a value which is a string
@@ -270,7 +272,7 @@ BuildGenomeBrowserResults is a reference to a hash where the following keys are 
 
 =item Description
 
-
+This saves the genome browser as a report... or maybe it should just return a path to the created directory?
 
 =back
 
@@ -487,7 +489,7 @@ alignment_refs has a value which is a reference to a list where each element is 
 
 =item Description
 
-Should have ONE of gff_file (a local file) or genome_ref (an object reference).
+Should have either a genome_ref or BOTH the gff_file and fasta_file paths.
 
 
 =item Definition
@@ -497,6 +499,7 @@ Should have ONE of gff_file (a local file) or genome_ref (an object reference).
 <pre>
 a reference to a hash where the following keys are defined:
 gff_file has a value which is a string
+fasta_file has a value which is a string
 genome_ref has a value which is a string
 
 </pre>
@@ -507,6 +510,7 @@ genome_ref has a value which is a string
 
 a reference to a hash where the following keys are defined:
 gff_file has a value which is a string
+fasta_file has a value which is a string
 genome_ref has a value which is a string
 
 
@@ -557,6 +561,12 @@ alignment_ref has a value which is a string
 
 =over 4
 
+
+
+=item Description
+
+Note that for the list of AlignmentFileInputs, this should be either a list of bam files OR a
+list of alignment references. NOT BOTH. At least, not in this version.
 
 
 =item Definition

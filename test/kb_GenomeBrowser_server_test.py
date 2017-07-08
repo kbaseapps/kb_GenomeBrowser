@@ -153,7 +153,7 @@ class GenomeBrowserTest(unittest.TestCase):
         shutil.copy(base_gbk_file, gbk_file)
         genome_ref = self.load_genbank_file(gbk_file, 'my_test_genome')
 
-        ret = self.getImpl().browse_genome(self.getContext(), {
+        ret = self.getImpl().browse_genome_app(self.getContext(), {
             "genome_ref": genome_ref,
             "result_workspace_name": self.getWsName()
         })
@@ -163,18 +163,18 @@ class GenomeBrowserTest(unittest.TestCase):
 
     def test_browse_genome_no_ref(self):
         with self.assertRaises(ValueError) as error:
-            self.getImpl().browse_genome(self.getContext(), None)
+            self.getImpl().browse_genome_app(self.getContext(), None)
 
     def test_browse_genome_bad_ref(self):
         with self.assertRaises(ValueError) as error:
-            self.getImpl().browse_genome(self.getContext(), {
+            self.getImpl().browse_genome_app(self.getContext(), {
                 "genome_ref": "not_a_genome_ref",
                 "result_workspace_name": self.getWsName()
             })
 
     def test_browse_genome_not_genome(self):
         with self.assertRaises(ValueError) as error:
-            self.getImpl().browse_genome(self.getContext(), {
+            self.getImpl().browse_genome_app(self.getContext(), {
                 "genome_ref": self.getWsName() + "/12345",
                 "result_workspace_name": self.getWsName()
             })
@@ -206,11 +206,11 @@ agcttttcatgg"""
 
     def test_browse_genome_bad_ws_name(self):
         with self.assertRaises(ValueError) as error:
-            self.getImpl().browse_genome(self.getContext(), 'some_genome', 123)
+            self.getImpl().browse_genome_app(self.getContext(), 'some_genome', 123)
 
     def test_browse_genome_no_ws_name(self):
         with self.assertRaises(ValueError) as error:
-            self.getImpl().browse_genome(self.getContext(), 'some_genome', None)
+            self.getImpl().browse_genome_app(self.getContext(), 'some_genome', None)
 
     def test_check_ref(self):
         good_refs = [

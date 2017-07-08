@@ -55,16 +55,21 @@ class kb_GenomeBrowser(object):
 
     def build_genome_browser(self, params, context=None):
         """
-        :param params: instance of type "BuildGenomeBrowserParams" ->
-           structure: parameter "genome_input" of type "GenomeFileInput"
-           (Should have ONE of gff_file (a local file) or genome_ref (an
-           object reference).) -> structure: parameter "gff_file" of String,
-           parameter "genome_ref" of String, parameter "alignment_inputs" of
-           list of type "AlignmentFileInput" (Should have ONE of bam_file (a
-           local file) or alignment_ref (an object reference).) -> structure:
-           parameter "bam_file" of String, parameter "alignment_ref" of
-           String, parameter "result_workspace_id" of Long, parameter
-           "genome_browser_name" of String
+        This saves the genome browser as a report... or maybe it should just return a path to the created directory?
+        :param params: instance of type "BuildGenomeBrowserParams" (Note that
+           for the list of AlignmentFileInputs, this should be either a list
+           of bam files OR a list of alignment references. NOT BOTH. At
+           least, not in this version.) -> structure: parameter
+           "genome_input" of type "GenomeFileInput" (Should have either a
+           genome_ref or BOTH the gff_file and fasta_file paths.) ->
+           structure: parameter "gff_file" of String, parameter "fasta_file"
+           of String, parameter "genome_ref" of String, parameter
+           "alignment_inputs" of list of type "AlignmentFileInput" (Should
+           have ONE of bam_file (a local file) or alignment_ref (an object
+           reference).) -> structure: parameter "bam_file" of String,
+           parameter "alignment_ref" of String, parameter
+           "result_workspace_id" of Long, parameter "genome_browser_name" of
+           String
         :returns: instance of type "BuildGenomeBrowserResults" -> structure:
            parameter "genome_browser_name" of String, parameter
            "genome_browser_ref" of String

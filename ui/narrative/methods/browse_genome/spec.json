@@ -37,7 +37,7 @@
         "service-mapping": {
             "url": "",
             "name": "kb_GenomeBrowser",
-            "method": "browse_genome",
+            "method": "browse_genome_app",
             "input_mapping": [
                 {
                     "input_parameter": "genome_ref",

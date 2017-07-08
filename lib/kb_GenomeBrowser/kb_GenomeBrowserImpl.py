@@ -34,7 +34,7 @@ KBase genome object.
     ######################################### noqa
     VERSION = "0.0.1"
     GIT_URL = "https://github.com/briehl/kb_GenomeBrowser"
-    GIT_COMMIT_HASH = "f1f3ee0bee2ddcffce63e7a7a9d79b8c5527981f"
+    GIT_COMMIT_HASH = "47f8acdc48c7aba6278ad669bb44cea2500621f5"
 
     #BEGIN_CLASS_HEADER
     # Class variables and functions can be defined in this block
@@ -52,6 +52,7 @@ KBase genome object.
         self.workspace_url = config['workspace-url']
         #END_CONSTRUCTOR
         pass
+
 
     def browse_genome_app(self, ctx, params):
         """
@@ -125,16 +126,21 @@ KBase genome object.
 
     def build_genome_browser(self, ctx, params):
         """
-        :param params: instance of type "BuildGenomeBrowserParams" ->
-           structure: parameter "genome_input" of type "GenomeFileInput"
-           (Should have ONE of gff_file (a local file) or genome_ref (an
-           object reference).) -> structure: parameter "gff_file" of String,
-           parameter "genome_ref" of String, parameter "alignment_inputs" of
-           list of type "AlignmentFileInput" (Should have ONE of bam_file (a
-           local file) or alignment_ref (an object reference).) -> structure:
-           parameter "bam_file" of String, parameter "alignment_ref" of
-           String, parameter "result_workspace_id" of Long, parameter
-           "genome_browser_name" of String
+        This saves the genome browser as a report... or maybe it should just return a path to the created directory?
+        :param params: instance of type "BuildGenomeBrowserParams" (Note that
+           for the list of AlignmentFileInputs, this should be either a list
+           of bam files OR a list of alignment references. NOT BOTH. At
+           least, not in this version.) -> structure: parameter
+           "genome_input" of type "GenomeFileInput" (Should have either a
+           genome_ref or BOTH the gff_file and fasta_file paths.) ->
+           structure: parameter "gff_file" of String, parameter "fasta_file"
+           of String, parameter "genome_ref" of String, parameter
+           "alignment_inputs" of list of type "AlignmentFileInput" (Should
+           have ONE of bam_file (a local file) or alignment_ref (an object
+           reference).) -> structure: parameter "bam_file" of String,
+           parameter "alignment_ref" of String, parameter
+           "result_workspace_id" of Long, parameter "genome_browser_name" of
+           String
         :returns: instance of type "BuildGenomeBrowserResults" -> structure:
            parameter "genome_browser_name" of String, parameter
            "genome_browser_ref" of String
