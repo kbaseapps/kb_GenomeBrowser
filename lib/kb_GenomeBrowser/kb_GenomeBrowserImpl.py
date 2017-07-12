@@ -53,7 +53,6 @@ KBase genome object.
         #END_CONSTRUCTOR
         pass
 
-
     def browse_genome_app(self, ctx, params):
         """
         Creates a genome browser from the given genome reference. It extracts the reference sequence from the genome
@@ -73,9 +72,11 @@ KBase genome object.
         # ctx is the context object
         # return variables are: returnVal
         #BEGIN browse_genome_app
+        if params is None:
+            raise ValueError("Missing all parameters!")
         genome_ref = params.get("genome_ref", None)
         result_workspace_name = params.get("result_workspace_name", None)
-        alignment_refs = params.get("alignment_refs", None)
+        alignment_refs = params.get("alignment_refs", [])
         print('Initializing browse_genome_app with the following parameters:')
         pprint(params)
 

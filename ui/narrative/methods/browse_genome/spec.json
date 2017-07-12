@@ -22,7 +22,7 @@
             }
         },
         {
-            "id": "bam_file_refs",
+            "id": "alignment_refs",
             "optional": true,
             "advanced": false,
             "allow_multiple": true,
@@ -49,9 +49,9 @@
                     "target_property": "result_workspace_name"
                 },
                 {
-                    "input_parameter": "bam_file_refs",
+                    "input_parameter": "alignment_refs",
                     "target_type_transform": "list<resolved-ref>",
-                    "target_property": "bam_file_refs"
+                    "target_property": "alignment_refs"
                 }
             ],
             "output_mapping": [

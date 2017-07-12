@@ -32,10 +32,10 @@ parameters :
             Genome
         short-hint : |
             The Genome to browse
-    bam_file_refs :
+    alignment_refs :
         ui-name: |
-            BAM Files
+            Alignment Files
         short-hint : |
-            A list of BAM files associated with the above Genome.
+            A list of Reads Alignment files associated with the above Genome.
 description : |
     <p>Prime that genome browser!</p>

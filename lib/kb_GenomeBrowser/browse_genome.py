@@ -146,6 +146,9 @@ class GenomeBrowserMaker:
         return genome_files
 
     def get_alignment_data_files(self, alignment_refs):
+        """
+        Returns a dictionary of data files. Key = object name, value = path to the file.
+        """
         alignment_files = dict()
         ru = ReadsAlignmentUtils(self.callback_url)
         for ref in alignment_refs:
@@ -183,9 +186,9 @@ class GenomeBrowserMaker:
         if genome_ref is not None:
             files.update(self.get_genome_data_files(genome_ref))
 
+        files["alignment_refs"] = dict()
         if alignment_refs is not None:
-            files.update(self.get_alignment_data_files(alignment_refs))
-
+            files["alignment_refs"] = self.get_alignment_data_files(alignment_refs)
         return files
 
     def create_browser_data(self, genome_ref, alignment_refs=None):
@@ -204,7 +207,9 @@ class GenomeBrowserMaker:
                     raise ValueError('all alignment_refs must be a reference of the format ws/oid or ws/oid/ver')
 
         files = self.get_browser_data_files(genome_ref=genome_ref, alignment_refs=alignment_refs)
-        return self.create_browser_data_from_files(files["assembly"], files["gff"], files["alignment_refs"])
+        return self.create_browser_data_from_files(
+            files.get("assembly", None), files.get("gff", None), files.get("alignment_refs", dict())
+        )
 
     def package_jbrowse_data(self, data_dir, output_dir):
         """
