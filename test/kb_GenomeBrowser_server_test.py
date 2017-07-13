@@ -28,6 +28,7 @@ from kb_GenomeBrowser.util import (
     check_workspace_name,
     package_directory
 )
+from file_util import FileUtil
 
 
 class GenomeBrowserTest(unittest.TestCase):
@@ -62,18 +63,34 @@ class GenomeBrowserTest(unittest.TestCase):
         cls.scratch = cls.cfg['scratch']
         cls.callback_url = os.environ['SDK_CALLBACK_URL']
 
+        suffix = int(time.time() * 1000)
+        wsName = "test_GenomeBrowser_" + str(suffix)
+        ret = cls.wsClient.create_workspace({'workspace': wsName})  # noqa
+        cls.wsName = wsName
+
+        cls.file_util = FileUtil(wsName, cls.wsURL, cls.callback_url)
+
         # Upload genomes
-        base_gbk_file = "data/streptococcus_pneumoniae_R6_ref.gbff"
-        gbk_file = os.path.join(self.scratch, os.path.basename(base_gbk_file))
+        base_gbk_file = "data/at_chrom1_section.gbk"
+        gbk_file = os.path.join(cls.scratch, os.path.basename(base_gbk_file))
         shutil.copy(base_gbk_file, gbk_file)
-        cls.genome_ref = self.load_genbank_file(gbk_file, 'my_test_genome')
+        cls.genome_ref = cls.file_util.load_genbank_file(gbk_file, 'my_test_genome')
         # get gff file
+        cls.gff_file = cls.file_util.get_gff_file(cls.genome_ref)
+        # get fasta file
+        cls.fasta_file = cls.file_util.get_fasta_file(cls.genome_ref)
+
+        # Upload reads
+        base_reads_file = "data/extracted_WT_rep1.fastq"
+        reads_file = os.path.join(cls.scratch, os.path.basename(base_reads_file))
+        shutil.copy(base_reads_file, reads_file)
+        cls.reads_ref = cls.file_util.load_reads_file("illumina", reads_file, None, "my_reads_lib")
 
         # Upload alignments
         base_align_file = "data/at_chr1_wt_rep1_hisat2.bam"
-        cls.align_file = os.path.join(self.scratch, os.path.basename(base_align_file))
-        shutil.copy(base_align_file, align_file)
-        cls.align_ref = self.load_bam_file(cls.align_file, cls.genome_ref, 'my_hisat2_alignment')
+        cls.bam_file = os.path.join(cls.scratch, os.path.basename(base_align_file))
+        shutil.copy(base_align_file, cls.bam_file)
+        cls.alignment_ref = cls.file_util.load_bam_file(cls.bam_file, cls.genome_ref, cls.reads_ref, 'my_hisat2_alignment')
 
     @classmethod
     def tearDownClass(cls):
@@ -85,13 +102,7 @@ class GenomeBrowserTest(unittest.TestCase):
         return self.__class__.wsClient
 
     def getWsName(self):
-        if hasattr(self.__class__, 'wsName'):
-            return self.__class__.wsName
-        suffix = int(time.time() * 1000)
-        wsName = "test_GenomeBrowser_" + str(suffix)
-        ret = self.getWsClient().create_workspace({'workspace': wsName})  # noqa
-        self.__class__.wsName = wsName
-        return wsName
+        return self.__class__.wsName
 
     def getImpl(self):
         return self.__class__.serviceImpl
@@ -99,38 +110,6 @@ class GenomeBrowserTest(unittest.TestCase):
     def getContext(self):
         return self.__class__.ctx
 
-    def load_bam_file(self, filename, genome_ref, obj_name):
-        """
-        TODO: this.
-        """
-        return "1/2/3"
-
-    def load_fasta_file(self, filename, obj_name, contents):
-        f = open(filename, 'w')
-        f.write(contents)
-        f.close()
-        assembly_util = AssemblyUtil(self.callback_url)
-        assembly_ref = assembly_util.save_assembly_from_fasta({
-            'file': {'path': filename},
-            'workspace_name': self.getWsName(),
-            'assembly_name': obj_name
-        })
-        return assembly_ref
-
-    def load_genbank_file(self, local_file, target_name):
-        gfu = GenomeFileUtil(self.callback_url)
-        genome_ref = gfu.genbank_to_genome({
-            "file": {
-                "path": local_file
-            },
-            "genome_name": target_name,
-            "workspace_name": self.getWsName(),
-            "source": "RefSeq",
-            "release": "NC_003098.1",
-            "genetic_code": 11,
-            "type": "User upload"
-        })
-        return genome_ref.get('genome_ref')  # yeah, i know.
 
     # /*
     # genome_name - becomes the name of the object
@@ -172,7 +151,7 @@ class GenomeBrowserTest(unittest.TestCase):
         })
         self.assertTrue(ret[0]['report_name'].startswith("GenomeBrowser"))
         self.assertTrue(check_reference(ret[0]['report_ref']))
-        self.assertEqual(ret[0]['genome_ref'], genome_ref)
+        self.assertEqual(ret[0]['genome_ref'], self.genome_ref)
 
     @unittest.skip
     def test_browse_genome_app_ok_with_alignments(self):
@@ -236,8 +215,7 @@ agcttttcatgg"""
                 "result_workspace_name": None
             })
 
-    @unittest.skip
-    def test_build_genome_browser_ok_no_bam(self):
+    def test_build_genome_browser_ok(self):
         """
         Test the good cases:
         1. valid genome ref, no alignments
@@ -245,14 +223,37 @@ agcttttcatgg"""
         3. valid gff/fasta, valid bam file(s)
         4. valid gff/fasta, valid alignment refs
         """
-        genome_ref = self.
         inputs = [{
-            "genome_input": {},
+            "genome_input": {
+                "genome_ref": self.genome_ref
+            },
             "alignment_inputs": []
         }, {
-            "genome_input": {},
+            "genome_input": {
+                "gff_file": self.gff_file,
+                "fasta_file": self.fasta_file
+            },
             "alignment_inputs": []
+        }, {
+            "genome_input": {
+                "gff_file": self.gff_file,
+                "fasta_file": self.fasta_file
+            },
+            "alignment_inputs": [{
+                "alignment_ref": self.alignment_ref
+            }]
+        }, {
+            "genome_input": {
+                "gff_file": self.gff_file,
+                "fasta_file": self.fasta_file
+            },
+            "alignment_inputs": [{
+                "bam_file": self.bam_file
+            }]
         }]
+        for input_set in inputs:
+            result = self.getImpl().build_genome_browser(self.getContext(), input_set)
+            print("build genome browser done - path = {}".format(result["browser_dir"]))
 
     @unittest.skip
     def test_build_genome_browser_no_genome(self):

@@ -149,6 +149,7 @@ KBase genome object.
         # ctx is the context object
         # return variables are: returnVal
         #BEGIN build_genome_browser
+        output_dir = os.path.join(self.scratch_dir, "min_jbrowse_{}".format(uuid.uuid4()))
         param_errors = check_build_genome_browser_parameters(params)
         if len(param_errors) > 0:
             for err in param_errors:
@@ -172,17 +173,22 @@ KBase genome object.
         # under the alignments, we either have a list of references or a list of bam file paths.
         # the checker ensures we don't have a mix.
         if "alignment_inputs" in params and len(params["alignment_inputs"]) > 0:
-            if "alignment_ref" in params["alignment_inputs"]:
-                alignment_files = browser.get_alignment_data_files([a["alignment_ref"] for a in params["alignment_inputs"]])
+            if "alignment_ref" in params["alignment_inputs"][0]:
+                alignment_files = browser.get_alignment_data_files(
+                    [a["alignment_ref"] for a in params["alignment_inputs"]]
+                )
             else:
                 alignment_files = dict()
                 for idx, align in enumerate(params["alignment_inputs"]):
                     alignment_files["alignment_{}".format(idx)] = align["bam_file"]
 
-        data = browser.create_browser_data_from_files(
+        browser_data = browser.create_browser_data_from_files(
             genome_files["assembly"], genome_files["gff"], alignment_files
         )
-
+        browser.package_jbrowse_data(browser_data['data_dir'], output_dir)
+        returnVal = {
+            "browser_dir": output_dir
+        }
         #END build_genome_browser
 
         # At some point might do deeper type checking...

@@ -150,7 +150,7 @@ class GenomeBrowserMaker:
         Returns a dictionary of data files. Key = object name, value = path to the file.
         """
         alignment_files = dict()
-        ru = ReadsAlignmentUtils(self.callback_url)
+        ru = ReadsAlignmentUtils(self.callback_url, service_ver='dev')
         for ref in alignment_refs:
             ref_name = get_object_name(ref, self.workspace_url)
             align_file = ru.download_alignment({

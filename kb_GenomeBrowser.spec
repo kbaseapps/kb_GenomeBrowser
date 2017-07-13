@@ -58,12 +58,11 @@ module kb_GenomeBrowser {
     } BuildGenomeBrowserParams;
 
     typedef structure {
-        string genome_browser_name;
-        string genome_browser_ref;
+        string browser_dir;
     } BuildGenomeBrowserResults;
 
     /*
-    This saves the genome browser as a report... or maybe it should just return a path to the created directory?
+    This returns a path to the newly created browser directory.
     */
     funcdef build_genome_browser(BuildGenomeBrowserParams params) returns (BuildGenomeBrowserResults) authentication required;
 };
