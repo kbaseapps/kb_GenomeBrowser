@@ -172,13 +172,13 @@ KBase genome object.
 
         # under the alignments, we either have a list of references or a list of bam file paths.
         # the checker ensures we don't have a mix.
+        alignment_files = dict()
         if "alignment_inputs" in params and len(params["alignment_inputs"]) > 0:
             if "alignment_ref" in params["alignment_inputs"][0]:
                 alignment_files = browser.get_alignment_data_files(
                     [a["alignment_ref"] for a in params["alignment_inputs"]]
                 )
             else:
-                alignment_files = dict()
                 for idx, align in enumerate(params["alignment_inputs"]):
                     alignment_files["alignment_{}".format(idx)] = align["bam_file"]
 

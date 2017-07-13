@@ -104,11 +104,11 @@ def check_build_genome_browser_parameters(params):
                     errors.append("alignment.alignment_ref must be a valid workspace reference "
                                   "string, not {}".format(alignment["alignment_ref"]))
 
-    if "result_workspace_id" not in params or len(params["result_workspace_id"].trim()) == 0:
-        errors.append("A workspace id must be provided!")
-    else:
-        try:
-            int(params["result_workspace_id"])
-        except:
-            errors.append("result_workspace_id must be an integer")
+    # if "result_workspace_id" not in params or len(params["result_workspace_id"].trim()) == 0:
+    #     errors.append("A workspace id must be provided!")
+    # else:
+    #     try:
+    #         int(params["result_workspace_id"])
+    #     except:
+    #         errors.append("result_workspace_id must be an integer")
     return errors
