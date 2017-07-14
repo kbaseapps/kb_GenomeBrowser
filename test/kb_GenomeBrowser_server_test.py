@@ -28,6 +28,7 @@ from kb_GenomeBrowser.util import (
     check_workspace_name,
     package_directory
 )
+from file_util import FileUtil
 
 
 class GenomeBrowserTest(unittest.TestCase):
@@ -62,6 +63,35 @@ class GenomeBrowserTest(unittest.TestCase):
         cls.scratch = cls.cfg['scratch']
         cls.callback_url = os.environ['SDK_CALLBACK_URL']
 
+        suffix = int(time.time() * 1000)
+        wsName = "test_GenomeBrowser_" + str(suffix)
+        ret = cls.wsClient.create_workspace({'workspace': wsName})  # noqa
+        cls.wsName = wsName
+
+        cls.file_util = FileUtil(wsName, cls.wsURL, cls.callback_url)
+
+        # Upload genomes
+        base_gbk_file = "data/at_chrom1_section.gbk"
+        gbk_file = os.path.join(cls.scratch, os.path.basename(base_gbk_file))
+        shutil.copy(base_gbk_file, gbk_file)
+        cls.genome_ref = cls.file_util.load_genbank_file(gbk_file, 'my_test_genome')
+        # get gff file
+        cls.gff_file = cls.file_util.get_gff_file(cls.genome_ref)
+        # get fasta file
+        cls.fasta_file = cls.file_util.get_fasta_file(cls.genome_ref)
+
+        # Upload reads
+        base_reads_file = "data/extracted_WT_rep1.fastq"
+        reads_file = os.path.join(cls.scratch, os.path.basename(base_reads_file))
+        shutil.copy(base_reads_file, reads_file)
+        cls.reads_ref = cls.file_util.load_reads_file("illumina", reads_file, None, "my_reads_lib")
+
+        # Upload alignments
+        base_align_file = "data/at_chr1_wt_rep1_hisat2.bam"
+        cls.bam_file = os.path.join(cls.scratch, os.path.basename(base_align_file))
+        shutil.copy(base_align_file, cls.bam_file)
+        cls.alignment_ref = cls.file_util.load_bam_file(cls.bam_file, cls.genome_ref, cls.reads_ref, 'my_hisat2_alignment')
+
     @classmethod
     def tearDownClass(cls):
         if hasattr(cls, 'wsName'):
@@ -72,46 +102,13 @@ class GenomeBrowserTest(unittest.TestCase):
         return self.__class__.wsClient
 
     def getWsName(self):
-        if hasattr(self.__class__, 'wsName'):
-            return self.__class__.wsName
-        suffix = int(time.time() * 1000)
-        wsName = "test_GenomeBrowser_" + str(suffix)
-        ret = self.getWsClient().create_workspace({'workspace': wsName})  # noqa
-        self.__class__.wsName = wsName
-        return wsName
+        return self.__class__.wsName
 
     def getImpl(self):
         return self.__class__.serviceImpl
 
     def getContext(self):
         return self.__class__.ctx
-
-    # # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
-    # def load_fasta_file(self, filename, obj_name, contents):
-    #     f = open(filename, 'w')
-    #     f.write(contents)
-    #     f.close()
-    #     assemblyUtil = AssemblyUtil(self.callback_url)
-    #     assembly_ref = assemblyUtil.save_assembly_from_fasta({'file': {'path': filename},
-    #                                                           'workspace_name': self.getWsName(),
-    #                                                           'assembly_name': obj_name
-    #                                                           })
-    #     return assembly_ref
-
-    def load_genbank_file(self, local_file, target_name):
-        gfu = GenomeFileUtil(self.callback_url)
-        genome_ref = gfu.genbank_to_genome({
-            "file": {
-                "path": local_file
-            },
-            "genome_name": target_name,
-            "workspace_name": self.getWsName(),
-            "source": "RefSeq",
-            "release": "NC_003098.1",
-            "genetic_code": 11,
-            "type": "User upload"
-        })
-        return genome_ref.get('genome_ref') # yeah, i know.
 
 
     # /*
@@ -147,47 +144,140 @@ class GenomeBrowserTest(unittest.TestCase):
     #     usermeta metadata;
     # } GenbankToGenomeParams;
 
-    def test_browse_genome_ok(self):
-        base_gbk_file = "data/streptococcus_pneumoniae_R6_ref.gbff"
-        gbk_file = os.path.join(self.scratch, os.path.basename(base_gbk_file))
-        shutil.copy(base_gbk_file, gbk_file)
-        genome_ref = self.load_genbank_file(gbk_file, 'my_test_genome')
-
-        ret = self.getImpl().browse_genome(self.getContext(), genome_ref, self.getWsName())
+    def test_browse_genome_app_ok_no_alignments(self):
+        ret = self.getImpl().browse_genome_app(self.getContext(), {
+            "genome_ref": self.genome_ref,
+            "result_workspace_name": self.getWsName()
+        })
         self.assertTrue(ret[0]['report_name'].startswith("GenomeBrowser"))
         self.assertTrue(check_reference(ret[0]['report_ref']))
-        self.assertEqual(ret[0]['genome_ref'], genome_ref)
+        self.assertEqual(ret[0]['genome_ref'], self.genome_ref)
 
-    def test_browse_genome_no_ref(self):
+    @unittest.skip
+    def test_browse_genome_app_ok_with_alignments(self):
+        pass
+
+    def test_browse_genome_app_no_ref(self):
         with self.assertRaises(ValueError) as error:
-            self.getImpl().browse_genome(self.getContext(), None, None)
+            self.getImpl().browse_genome_app(self.getContext(), None)
 
-    def test_browse_genome_bad_ref(self):
+    def test_browse_genome_app_bad_ref(self):
         with self.assertRaises(ValueError) as error:
-            self.getImpl().browse_genome(self.getContext(), 'not_a_genome_ref', self.getWsName())
+            self.getImpl().browse_genome_app(self.getContext(), {
+                "genome_ref": "not_a_genome_ref",
+                "result_workspace_name": self.getWsName()
+            })
 
-    def test_browse_genome_not_genome(self):
-        pass
-
-    def test_browse_genome_no_assembly(self):
-        pass
-
-    def test_browse_genome_too_many_assembly(self):
-        pass
-
-    def test_browse_genome_gff_fail(self):
-        pass
-
-    def test_browse_genome_fasta_fail(self):
-        pass
-
-    def test_browse_genome_bad_ws_name(self):
+    def test_browse_genome_app_not_genome(self):
         with self.assertRaises(ValueError) as error:
-            self.getImpl().browse_genome(self.getContext(), 'some_genome', 123)
+            self.getImpl().browse_genome_app(self.getContext(), {
+                "genome_ref": self.getWsName() + "/12345",
+                "result_workspace_name": self.getWsName()
+            })
 
-    def test_browse_genome_no_ws_name(self):
+    def test_browse_genome_app_no_assembly(self):
+        # NEED A GENOME AS WS JSON FILE TO UPLOAD, or unlink (can I do that?) from an assembly
+        pass
+
+    @unittest.skip
+    def test_browse_genome_app_too_many_assembly(self):
+        # NEED A GENONE AND AN EXTRA ASSEMBLY FILE TO LINK.
+        fasta_content = """>seq1 something soemthing asdf
+agcttttcat
+>seq2
+agctt
+>seq3
+agcttttcatgg"""
+        assembly_ref = self.load_fasta_file(os.path.join(self.scratch, 'test1.fasta'),
+                                            'TestAssembly',
+                                            fasta_content)
+        pass
+
+    def test_browse_genome_app_gff_fail(self):
+        # NEED TO TRIGGER flatfile-to-json.pl FAILURE
+        pass
+
+    def test_browse_genome_app_fasta_fail(self):
+        # NEED TO TRIGGER prepare-refseqs.pl FAILURE
+        pass
+
+    def test_browse_genome_app_bad_ws_name(self):
         with self.assertRaises(ValueError) as error:
-            self.getImpl().browse_genome(self.getContext(), 'some_genome', None)
+            self.getImpl().browse_genome_app(self.getContext(), {
+                "genome_ref": "some_genome",
+                "result_workspace_name": 123
+            })
+
+    def test_browse_genome_app_no_ws_name(self):
+        with self.assertRaises(ValueError) as error:
+            self.getImpl().browse_genome_app(self.getContext(), {
+                "genome_ref": "some_genome",
+                "result_workspace_name": None
+            })
+
+    def test_build_genome_browser_ok(self):
+        """
+        Test the good cases:
+        1. valid genome ref, no alignments
+        2. valid gff and fasta files, no alignments
+        3. valid gff/fasta, valid bam file(s)
+        4. valid gff/fasta, valid alignment refs
+        """
+        inputs = [{
+            "genome_input": {
+                "genome_ref": self.genome_ref
+            },
+            "alignment_inputs": []
+        }, {
+            "genome_input": {
+                "gff_file": self.gff_file,
+                "fasta_file": self.fasta_file
+            },
+            "alignment_inputs": []
+        }, {
+            "genome_input": {
+                "gff_file": self.gff_file,
+                "fasta_file": self.fasta_file
+            },
+            "alignment_inputs": [{
+                "alignment_ref": self.alignment_ref
+            }]
+        }, {
+            "genome_input": {
+                "gff_file": self.gff_file,
+                "fasta_file": self.fasta_file
+            },
+            "alignment_inputs": [{
+                "bam_file": self.bam_file
+            }]
+        }]
+        for input_set in inputs:
+            result = self.getImpl().build_genome_browser(self.getContext(), input_set)
+            print("build genome browser done - path = {}".format(result[0]["browser_dir"]))
+
+    @unittest.skip
+    def test_build_genome_browser_no_genome(self):
+        pass
+
+    @unittest.skip
+    def test_build_genome_browser_bad_genome_ref(self):
+        pass
+
+    @unittest.skip
+    def test_build_genome_browser_bad_genome_files(self):
+        pass
+
+    @unittest.skip
+    def test_build_genome_browser_bad_bam_file(self):
+        pass
+
+    @unittest.skip
+    def test_build_genome_browser_bad_alignment_refs(self):
+        pass
+
+    @unittest.skip
+    def test_build_genome_browser_mix_align_refs_bam_file(self):
+        pass
 
     def test_check_ref(self):
         good_refs = [
@@ -218,48 +308,3 @@ class GenomeBrowserTest(unittest.TestCase):
             self.assertTrue(check_workspace_name(name, self.wsURL))
         for name in bad_names:
             self.assertFalse(check_workspace_name(name, self.wsURL))
-
-
-
-    # # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
-    # def test_filter_contigs_ok(self):
-    #
-    #     # First load a test FASTA file as an KBase Assembly
-    #     fasta_content = '>seq1 something soemthing asdf\n' \
-    #                     'agcttttcat\n' \
-    #                     '>seq2\n' \
-    #                     'agctt\n' \
-    #                     '>seq3\n' \
-    #                     'agcttttcatgg'
-    #
-    #     assembly_ref = self.load_fasta_file(os.path.join(self.scratch, 'test1.fasta'),
-    #                                         'TestAssembly',
-    #                                         fasta_content)
-    #
-    #     # Second, call your implementation
-    #     ret = self.getImpl().filter_contigs(self.getContext(),
-    #                                         {'workspace_name': self.getWsName(),
-    #                                          'assembly_input_ref': assembly_ref,
-    #                                          'min_length': 10
-    #                                          })
-    #
-    #     # Validate the returned data
-    #     self.assertEqual(ret[0]['n_initial_contigs'], 3)
-    #     self.assertEqual(ret[0]['n_contigs_removed'], 1)
-    #     self.assertEqual(ret[0]['n_contigs_remaining'], 2)
-    #
-    # def test_filter_contigs_err1(self):
-    #     with self.assertRaises(ValueError) as errorContext:
-    #         self.getImpl().filter_contigs(self.getContext(),
-    #                                       {'workspace_name': self.getWsName(),
-    #                                        'assembly_input_ref': '1/fake/3',
-    #                                        'min_length': '-10'})
-    #     self.assertIn('min_length parameter cannot be negative', str(errorContext.exception))
-    #
-    # def test_filter_contigs_err2(self):
-    #     with self.assertRaises(ValueError) as errorContext:
-    #         self.getImpl().filter_contigs(self.getContext(),
-    #                                       {'workspace_name': self.getWsName(),
-    #                                        'assembly_input_ref': '1/fake/3',
-    #                                        'min_length': 'ten'})
-    #     self.assertIn('Cannot parse integer from min_length parameter', str(errorContext.exception))

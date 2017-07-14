@@ -110,9 +110,9 @@ sub new
 
 
 
-=head2 browse_genome
+=head2 browse_genome_app
 
-  $return = $obj->browse_genome($genome_ref, $result_workspace_name)
+  $return = $obj->browse_genome_app($params)
 
 =over 4
 
@@ -121,9 +121,12 @@ sub new
 =begin html
 
 <pre>
-$genome_ref is a string
-$result_workspace_name is a string
+$params is a kb_GenomeBrowser.BrowseGenomeParams
 $return is a kb_GenomeBrowser.BrowseGenomeResults
+BrowseGenomeParams is a reference to a hash where the following keys are defined:
+	genome_ref has a value which is a string
+	result_workspace_name has a value which is a string
+	alignment_refs has a value which is a reference to a list where each element is a string
 BrowseGenomeResults is a reference to a hash where the following keys are defined:
 	report_name has a value which is a string
 	report_ref has a value which is a string
@@ -135,9 +138,12 @@ BrowseGenomeResults is a reference to a hash where the following keys are define
 
 =begin text
 
-$genome_ref is a string
-$result_workspace_name is a string
+$params is a kb_GenomeBrowser.BrowseGenomeParams
 $return is a kb_GenomeBrowser.BrowseGenomeResults
+BrowseGenomeParams is a reference to a hash where the following keys are defined:
+	genome_ref has a value which is a string
+	result_workspace_name has a value which is a string
+	alignment_refs has a value which is a reference to a list where each element is a string
 BrowseGenomeResults is a reference to a hash where the following keys are defined:
 	report_name has a value which is a string
 	report_ref has a value which is a string
@@ -160,49 +166,160 @@ Add option for other annotation tracks.
 
 =cut
 
- sub browse_genome
+ sub browse_genome_app
 {
     my($self, @args) = @_;
 
 # Authentication: required
 
-    if ((my $n = @args) != 2)
+    if ((my $n = @args) != 1)
     {
 	Bio::KBase::Exceptions::ArgumentValidationError->throw(error =>
-							       "Invalid argument count for function browse_genome (received $n, expecting 2)");
+							       "Invalid argument count for function browse_genome_app (received $n, expecting 1)");
     }
     {
-	my($genome_ref, $result_workspace_name) = @args;
+	my($params) = @args;
 
 	my @_bad_arguments;
-        (!ref($genome_ref)) or push(@_bad_arguments, "Invalid type for argument 1 \"genome_ref\" (value was \"$genome_ref\")");
-        (!ref($result_workspace_name)) or push(@_bad_arguments, "Invalid type for argument 2 \"result_workspace_name\" (value was \"$result_workspace_name\")");
+        (ref($params) eq 'HASH') or push(@_bad_arguments, "Invalid type for argument 1 \"params\" (value was \"$params\")");
         if (@_bad_arguments) {
-	    my $msg = "Invalid arguments passed to browse_genome:\n" . join("", map { "\t$_\n" } @_bad_arguments);
+	    my $msg = "Invalid arguments passed to browse_genome_app:\n" . join("", map { "\t$_\n" } @_bad_arguments);
 	    Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
-								   method_name => 'browse_genome');
+								   method_name => 'browse_genome_app');
 	}
     }
 
     my $url = $self->{url};
     my $result = $self->{client}->call($url, $self->{headers}, {
-	    method => "kb_GenomeBrowser.browse_genome",
+	    method => "kb_GenomeBrowser.browse_genome_app",
 	    params => \@args,
     });
     if ($result) {
 	if ($result->is_error) {
 	    Bio::KBase::Exceptions::JSONRPC->throw(error => $result->error_message,
 					       code => $result->content->{error}->{code},
-					       method_name => 'browse_genome',
+					       method_name => 'browse_genome_app',
 					       data => $result->content->{error}->{error} # JSON::RPC::ReturnObject only supports JSONRPC 1.1 or 1.O
 					      );
 	} else {
 	    return wantarray ? @{$result->result} : $result->result->[0];
 	}
     } else {
-        Bio::KBase::Exceptions::HTTP->throw(error => "Error invoking method browse_genome",
+        Bio::KBase::Exceptions::HTTP->throw(error => "Error invoking method browse_genome_app",
 					    status_line => $self->{client}->status_line,
-					    method_name => 'browse_genome',
+					    method_name => 'browse_genome_app',
+				       );
+    }
+}
+ 
+
+
+=head2 build_genome_browser
+
+  $return = $obj->build_genome_browser($params)
+
+=over 4
+
+=item Parameter and return types
+
+=begin html
+
+<pre>
+$params is a kb_GenomeBrowser.BuildGenomeBrowserParams
+$return is a kb_GenomeBrowser.BuildGenomeBrowserResults
+BuildGenomeBrowserParams is a reference to a hash where the following keys are defined:
+	genome_input has a value which is a kb_GenomeBrowser.GenomeFileInput
+	alignment_inputs has a value which is a reference to a list where each element is a kb_GenomeBrowser.AlignmentFileInput
+	result_workspace_id has a value which is an int
+	genome_browser_name has a value which is a string
+GenomeFileInput is a reference to a hash where the following keys are defined:
+	gff_file has a value which is a string
+	fasta_file has a value which is a string
+	genome_ref has a value which is a string
+AlignmentFileInput is a reference to a hash where the following keys are defined:
+	bam_file has a value which is a string
+	alignment_ref has a value which is a string
+BuildGenomeBrowserResults is a reference to a hash where the following keys are defined:
+	genome_browser_name has a value which is a string
+	genome_browser_ref has a value which is a string
+
+</pre>
+
+=end html
+
+=begin text
+
+$params is a kb_GenomeBrowser.BuildGenomeBrowserParams
+$return is a kb_GenomeBrowser.BuildGenomeBrowserResults
+BuildGenomeBrowserParams is a reference to a hash where the following keys are defined:
+	genome_input has a value which is a kb_GenomeBrowser.GenomeFileInput
+	alignment_inputs has a value which is a reference to a list where each element is a kb_GenomeBrowser.AlignmentFileInput
+	result_workspace_id has a value which is an int
+	genome_browser_name has a value which is a string
+GenomeFileInput is a reference to a hash where the following keys are defined:
+	gff_file has a value which is a string
+	fasta_file has a value which is a string
+	genome_ref has a value which is a string
+AlignmentFileInput is a reference to a hash where the following keys are defined:
+	bam_file has a value which is a string
+	alignment_ref has a value which is a string
+BuildGenomeBrowserResults is a reference to a hash where the following keys are defined:
+	genome_browser_name has a value which is a string
+	genome_browser_ref has a value which is a string
+
+
+=end text
+
+=item Description
+
+This saves the genome browser as a report... or maybe it should just return a path to the created directory?
+
+=back
+
+=cut
+
+ sub build_genome_browser
+{
+    my($self, @args) = @_;
+
+# Authentication: required
+
+    if ((my $n = @args) != 1)
+    {
+	Bio::KBase::Exceptions::ArgumentValidationError->throw(error =>
+							       "Invalid argument count for function build_genome_browser (received $n, expecting 1)");
+    }
+    {
+	my($params) = @args;
+
+	my @_bad_arguments;
+        (ref($params) eq 'HASH') or push(@_bad_arguments, "Invalid type for argument 1 \"params\" (value was \"$params\")");
+        if (@_bad_arguments) {
+	    my $msg = "Invalid arguments passed to build_genome_browser:\n" . join("", map { "\t$_\n" } @_bad_arguments);
+	    Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
+								   method_name => 'build_genome_browser');
+	}
+    }
+
+    my $url = $self->{url};
+    my $result = $self->{client}->call($url, $self->{headers}, {
+	    method => "kb_GenomeBrowser.build_genome_browser",
+	    params => \@args,
+    });
+    if ($result) {
+	if ($result->is_error) {
+	    Bio::KBase::Exceptions::JSONRPC->throw(error => $result->error_message,
+					       code => $result->content->{error}->{code},
+					       method_name => 'build_genome_browser',
+					       data => $result->content->{error}->{error} # JSON::RPC::ReturnObject only supports JSONRPC 1.1 or 1.O
+					      );
+	} else {
+	    return wantarray ? @{$result->result} : $result->result->[0];
+	}
+    } else {
+        Bio::KBase::Exceptions::HTTP->throw(error => "Error invoking method build_genome_browser",
+					    status_line => $self->{client}->status_line,
+					    method_name => 'build_genome_browser',
 				       );
     }
 }
@@ -250,16 +367,16 @@ sub version {
             Bio::KBase::Exceptions::JSONRPC->throw(
                 error => $result->error_message,
                 code => $result->content->{code},
-                method_name => 'browse_genome',
+                method_name => 'build_genome_browser',
             );
         } else {
             return wantarray ? @{$result->result} : $result->result->[0];
         }
     } else {
         Bio::KBase::Exceptions::HTTP->throw(
-            error => "Error invoking method browse_genome",
+            error => "Error invoking method build_genome_browser",
             status_line => $self->{client}->status_line,
-            method_name => 'browse_genome',
+            method_name => 'build_genome_browser',
         );
     }
 }
@@ -322,6 +439,190 @@ a reference to a hash where the following keys are defined:
 report_name has a value which is a string
 report_ref has a value which is a string
 genome_ref has a value which is a string
+
+
+=end text
+
+=back
+
+
+
+=head2 BrowseGenomeParams
+
+=over 4
+
+
+
+=item Definition
+
+=begin html
+
+<pre>
+a reference to a hash where the following keys are defined:
+genome_ref has a value which is a string
+result_workspace_name has a value which is a string
+alignment_refs has a value which is a reference to a list where each element is a string
+
+</pre>
+
+=end html
+
+=begin text
+
+a reference to a hash where the following keys are defined:
+genome_ref has a value which is a string
+result_workspace_name has a value which is a string
+alignment_refs has a value which is a reference to a list where each element is a string
+
+
+=end text
+
+=back
+
+
+
+=head2 GenomeFileInput
+
+=over 4
+
+
+
+=item Description
+
+Should have either a genome_ref or BOTH the gff_file and fasta_file paths.
+
+
+=item Definition
+
+=begin html
+
+<pre>
+a reference to a hash where the following keys are defined:
+gff_file has a value which is a string
+fasta_file has a value which is a string
+genome_ref has a value which is a string
+
+</pre>
+
+=end html
+
+=begin text
+
+a reference to a hash where the following keys are defined:
+gff_file has a value which is a string
+fasta_file has a value which is a string
+genome_ref has a value which is a string
+
+
+=end text
+
+=back
+
+
+
+=head2 AlignmentFileInput
+
+=over 4
+
+
+
+=item Description
+
+Should have ONE of bam_file (a local file) or alignment_ref (an object reference).
+
+
+=item Definition
+
+=begin html
+
+<pre>
+a reference to a hash where the following keys are defined:
+bam_file has a value which is a string
+alignment_ref has a value which is a string
+
+</pre>
+
+=end html
+
+=begin text
+
+a reference to a hash where the following keys are defined:
+bam_file has a value which is a string
+alignment_ref has a value which is a string
+
+
+=end text
+
+=back
+
+
+
+=head2 BuildGenomeBrowserParams
+
+=over 4
+
+
+
+=item Description
+
+Note that for the list of AlignmentFileInputs, this should be either a list of bam files OR a
+list of alignment references. NOT BOTH. At least, not in this version.
+
+
+=item Definition
+
+=begin html
+
+<pre>
+a reference to a hash where the following keys are defined:
+genome_input has a value which is a kb_GenomeBrowser.GenomeFileInput
+alignment_inputs has a value which is a reference to a list where each element is a kb_GenomeBrowser.AlignmentFileInput
+result_workspace_id has a value which is an int
+genome_browser_name has a value which is a string
+
+</pre>
+
+=end html
+
+=begin text
+
+a reference to a hash where the following keys are defined:
+genome_input has a value which is a kb_GenomeBrowser.GenomeFileInput
+alignment_inputs has a value which is a reference to a list where each element is a kb_GenomeBrowser.AlignmentFileInput
+result_workspace_id has a value which is an int
+genome_browser_name has a value which is a string
+
+
+=end text
+
+=back
+
+
+
+=head2 BuildGenomeBrowserResults
+
+=over 4
+
+
+
+=item Definition
+
+=begin html
+
+<pre>
+a reference to a hash where the following keys are defined:
+genome_browser_name has a value which is a string
+genome_browser_ref has a value which is a string
+
+</pre>
+
+=end html
+
+=begin text
+
+a reference to a hash where the following keys are defined:
+genome_browser_name has a value which is a string
+genome_browser_ref has a value which is a string
 
 
 =end text

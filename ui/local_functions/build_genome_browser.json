@@ -1,0 +1,16 @@
+{
+    "name": "Build Genome Browser",
+    "short_description": "Construct a Genome Browser from genomic data files",
+    "long_description": "Assemble an instance of JBrowse using a genome, annotation, and reads alignment (BAM) files.",
+    "tags": {
+        "categories": [],
+        "input": {
+            "file_types": [],
+            "kb_types": []
+        },
+        "output": {
+            "file_types": [],
+            "kb_types": []
+        }
+    }
+}
