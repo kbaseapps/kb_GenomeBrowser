@@ -53,8 +53,6 @@ module kb_GenomeBrowser {
     typedef structure {
         GenomeFileInput genome_input;
         list<AlignmentFileInput> alignment_inputs;
-        int result_workspace_id;
-        string genome_browser_name;
     } BuildGenomeBrowserParams;
 
     typedef structure {
