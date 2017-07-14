@@ -253,7 +253,7 @@ agcttttcatgg"""
         }]
         for input_set in inputs:
             result = self.getImpl().build_genome_browser(self.getContext(), input_set)
-            print("build genome browser done - path = {}".format(result["browser_dir"]))
+            print("build genome browser done - path = {}".format(result[0]["browser_dir"]))
 
     @unittest.skip
     def test_build_genome_browser_no_genome(self):
