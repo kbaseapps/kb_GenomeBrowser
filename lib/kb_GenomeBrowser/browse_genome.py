@@ -92,11 +92,30 @@ class GenomeBrowserMaker:
         print('Converting BAM files to alignment tracks...')
         for alignment_name in alignment_files:
             print('Converting BAM file {}'.format(alignment_name))
+            # 1. get the actual file name for the bam file
+            align_file_fullpath = alignment_files[alignment_name]
+            align_filename = os.path.basename(align_file_fullpath)
+            # 2. move it (copy?) to the right location
+            shutil.copy2(align_file_fullpath, os.path.join(self.out_dir, align_filename))
+
+            # 2.a. TODO: check the header inside the file that it's the correct chromosome...
+            # 3. make a BAI file with samtools
+            align_file_fullpath = os.path.join(self.out_dir, align_filename)
+            sam_bai_cmd = ['samtools',
+                           'index',
+                           align_file_fullpath,
+                           "{}.bai".format(align_file_fullpath)]
+            print("Building BAM index with command: {}".format(" ".join(sam_bai_cmd)))
+            p = subprocess.Popen(sam_bai_cmd, shell=False)
+            retcode = p.wait()
+            if retcode != 0:
+                raise RuntimeError('Failed to make index file from BAM file! Return code: {}'.format(retcode))
+            # 4. add the filename to the trackList with add-bam-track.pl
             track_cmd = [os.path.join(self.jbrowse_bin, 'add-bam-track.pl'),
                          '--label',
                          alignment_name,
                          '--bam_url',
-                         alignment_files[alignment_name],
+                         align_filename,
                          '--in',
                          os.path.join(self.out_dir, 'trackList.json')]
             p = subprocess.Popen(track_cmd, shell=False)
@@ -155,9 +174,11 @@ class GenomeBrowserMaker:
             ref_name = get_object_name(ref, self.workspace_url)
             align_file = ru.download_alignment({
                 "source_ref": ref,
-                "downloadBAI": 1
+                "downloadBAI": 0
             })
-            alignment_files[ref_name] = align_file["destination_dir"]
+            for f in os.listdir(align_file["destination_dir"]):
+                if f.endswith("bam"):
+                    alignment_files[ref_name] = os.path.join(align_file["destination_dir"], f)
         return alignment_files
 
     def get_browser_data_files(self, genome_ref=None, alignment_refs=None):
